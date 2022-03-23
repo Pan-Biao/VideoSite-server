@@ -12,7 +12,7 @@ type User struct {
 	PasswordDigest string
 	Nickname       string
 	Status         string
-	Avatar         string
+	HeadPortrait   string
 	Root           bool
 }
 

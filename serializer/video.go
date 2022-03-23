@@ -15,6 +15,7 @@ type Video struct {
 	PlayNumber int    `json:"play_number"`
 	Uid        uint   `json:"uid"`
 	Said       uint   `json:"said"`
+	Cover      string `json:"cover"`
 	User       User   `json:"user"`
 }
 
@@ -33,6 +34,7 @@ func BuildVideo(item model.Video) Video {
 		PlayNumber: item.PlayNumber,
 		Uid:        item.Uid,
 		Said:       item.Said,
+		Cover:      item.Cover,
 		User:       buildUser,
 	}
 }

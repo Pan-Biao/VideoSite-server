@@ -19,8 +19,8 @@ type CreateVideoService struct {
 	Said  uint   `form:"said" json:"said" binding:"required"`
 }
 
-const DefaultPath = "G:/videoResources"
-const vpath = "video"
+const DefaultVideoPath = "G:/videoResources/video"
+const DefaultImgPath = "G:/videoResources/cover"
 
 // 视频投稿的服务
 func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
@@ -32,15 +32,6 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 		}
 	}
 
-	log.Println(service.Said)
-	// said, err := strconv.Atoi(service.Said)
-	// if err != nil {
-	// 	return serializer.Response{
-	// 		Code: 200,
-	// 		Msg:  "said参数错误",
-	// 	}
-	// }
-
 	video := model.Video{
 		Title:      service.Title,
 		Info:       service.Info,
@@ -50,33 +41,49 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 		Uid:        user.ID,
 		Said:       service.Said,
 	}
-	lastVideo := model.Video{}
-	if err := model.DB.Last(&lastVideo).Error; err == nil {
-		return serializer.Response{
-			Code: 404,
-			Data: serializer.BuildVideo(video),
-			Msg:  "数据库查询错误",
-		}
-	}
-	tempvid := lastVideo.ID + 1
+
+	model.DB.Create(&video)
 
 	//获取上传文件
-	file, err := c.FormFile("video")
+	videoFile, err := c.FormFile("video")
+	if err != nil {
+		model.DB.Delete(&video)
+		return serializer.Response{
+			Code:  50005,
+			Msg:   "上传视频失败,可能是文件名太长",
+			Error: err.Error(),
+		}
+	}
+	vimgFile, err := c.FormFile("vimg")
 	if err == nil {
-		log.Println(file.Filename)
+		log.Println(videoFile.Filename, vimgFile.Filename)
 		id := strconv.FormatUint(uint64(user.ID), 10)
-		vid := strconv.FormatUint(uint64(tempvid), 10)
+		vid := strconv.FormatUint(uint64(video.ID), 10)
 		//上传
-		newName := vid + util.Intercept(file.Filename)
-		log.Println(newName)
+		newVideoName := vid + util.Intercept(videoFile.Filename)
+		newVimgName := vid + util.Intercept(vimgFile.Filename)
+		log.Println(newVideoName, newVimgName)
 		//保存路径 创建文件夹
-		dst := path.Join(DefaultPath, id, vpath)
-		os.MkdirAll(dst, 0777)
+		videoDst := path.Join(DefaultVideoPath, id)
+		imgDst := path.Join(DefaultImgPath, id)
+		os.MkdirAll(videoDst, 0777)
+		os.MkdirAll(imgDst, 0777)
 		//文件路径
-		filePath := path.Join(DefaultPath, id, vpath, newName)
-		log.Println(filePath)
-		//保存文件
-		if c.SaveUploadedFile(file, filePath) != nil {
+		videoFilePath := path.Join(DefaultVideoPath, id, newVideoName)
+		imgFilePath := path.Join(DefaultImgPath, id, newVimgName)
+		log.Println(videoFilePath, newVimgName)
+		//保存video文件
+		if c.SaveUploadedFile(videoFile, videoFilePath) != nil {
+			model.DB.Delete(&video)
+			return serializer.Response{
+				Code:  500006,
+				Msg:   "读取文件错误",
+				Error: err.Error(),
+			}
+		}
+		//保存img文件
+		if c.SaveUploadedFile(vimgFile, imgFilePath) != nil {
+			model.DB.Delete(&video)
 			return serializer.Response{
 				Code:  500006,
 				Msg:   "读取文件错误",
@@ -85,7 +92,8 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 		}
 		//更新投稿状态
 		video.State = true
-		video.Path = filePath
+		video.Path = videoFilePath
+		video.Cover = path.Join(id, newVimgName)
 		model.DB.Save(&video)
 
 		return serializer.Response{
@@ -95,9 +103,10 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 		}
 
 	} else {
+		model.DB.Delete(&video)
 		return serializer.Response{
 			Code:  50005,
-			Msg:   "上传失败,可能是文件名太长",
+			Msg:   "上传视频封面失败,可能是文件名太长",
 			Error: err.Error(),
 		}
 	}

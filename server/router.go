@@ -79,7 +79,7 @@ func NewRouter() *gin.Engine {
 
 		//用户静态资源
 		v1.Static("/assets", "./assets")
-		v1.StaticFS("/file", http.Dir("G:/videoResources"))
+		v1.StaticFS("/cover", http.Dir("G:/videoResources/cover"))
 	}
 
 	return r

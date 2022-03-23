@@ -12,4 +12,5 @@ type Video struct {
 	PlayNumber int
 	Uid        uint
 	Said       uint
+	Cover      string
 }

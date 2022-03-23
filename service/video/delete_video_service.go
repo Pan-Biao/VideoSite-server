@@ -3,6 +3,7 @@ package video
 import (
 	"log"
 	"os"
+	"path"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
 
@@ -38,6 +39,14 @@ func (service *DeleteVideoService) Delete(c *gin.Context) serializer.Response {
 			return serializer.Response{
 				Code:  50003,
 				Msg:   "视频删除失败",
+				Error: err.Error(),
+			}
+		}
+
+		if err := os.Remove(path.Join(DefaultImgPath + video.Cover)); err != nil {
+			return serializer.Response{
+				Code:  50003,
+				Msg:   "视频封面删除失败",
 				Error: err.Error(),
 			}
 		}

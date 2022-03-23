@@ -17,8 +17,7 @@ type UpdateUserService struct {
 	Nickname string `form:"nickname" json:"nickname" binding:"min=2,max=8"`
 }
 
-const DefaultPath = "G:/videoResources"
-const avater = "avater"
+const DefaultHeadPortraitPath = "G:/videoResources/head_portrait"
 
 // Login 用户登录函数
 func (service *UpdateUserService) Update(c *gin.Context) serializer.Response {
@@ -39,10 +38,10 @@ func (service *UpdateUserService) Update(c *gin.Context) serializer.Response {
 		newName := id + util.Intercept(file.Filename)
 		log.Println(newName)
 		//保存路径 创建文件夹
-		dst := path.Join(DefaultPath, id, avater)
+		dst := path.Join(DefaultHeadPortraitPath, id)
 		os.MkdirAll(dst, 0777)
 		//文件路径
-		filePath := path.Join(DefaultPath, id, avater, newName)
+		filePath := path.Join(DefaultHeadPortraitPath, id, newName)
 		log.Println(filePath)
 		//保存文件
 		if c.SaveUploadedFile(file, filePath) != nil {
@@ -53,7 +52,7 @@ func (service *UpdateUserService) Update(c *gin.Context) serializer.Response {
 			}
 		}
 		//更新数据库数据
-		user.Avatar = filePath
+		user.HeadPortrait = path.Join(id, newName)
 	}
 
 	//更新数据库数据
