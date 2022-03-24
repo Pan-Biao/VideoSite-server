@@ -20,7 +20,7 @@ func CreateVideo(c *gin.Context) {
 // ShowVideo 视频详情接口
 func ShowVideo(c *gin.Context) {
 	service := video.ShowVideoService{}
-	res := service.Show(c.Param("id"))
+	res := service.Show(c.Param("vid"))
 	c.JSON(200, res)
 }
 
@@ -54,7 +54,12 @@ func DeleteVideo(c *gin.Context) {
 }
 
 // PlayVideo 视频播放接口
-func PlayVideo(c *gin.Context) {
-	service := video.PlayVideoService{}
-	service.Play(c)
+// func PlayVideo(c *gin.Context) {
+// 	service := video.PlayVideoService{}
+// 	service.Play(c)
+// }
+
+func PlayNumber(c *gin.Context) {
+	serice := video.PlayVideoService{}
+	serice.Add(c)
 }

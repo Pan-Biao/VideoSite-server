@@ -15,6 +15,7 @@ import (
 // UpdateUserService 修改用户信息的服务
 type UpdateUserService struct {
 	Nickname string `form:"nickname" json:"nickname" binding:"min=2,max=8"`
+	Info     string `form:"info" json:"info" binding:"min=1,max=30"`
 }
 
 const DefaultHeadPortraitPath = "G:/videoResources/head_portrait"
@@ -52,11 +53,12 @@ func (service *UpdateUserService) Update(c *gin.Context) serializer.Response {
 			}
 		}
 		//更新数据库数据
-		user.HeadPortrait = path.Join(id, newName)
+		user.HeadPortrait = path.Join("head_portrait", id, newName)
 	}
 
 	//更新数据库数据
 	user.Nickname = service.Nickname
+	user.Info = service.Info
 	model.DB.Save(&user)
 
 	return serializer.Response{

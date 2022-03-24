@@ -13,6 +13,7 @@ type User struct {
 	Nickname       string
 	Status         string
 	HeadPortrait   string
+	Info           string
 	Root           bool
 }
 

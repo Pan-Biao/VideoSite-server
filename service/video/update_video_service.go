@@ -87,7 +87,7 @@ func (service *UpdateVideoService) Update(c *gin.Context) serializer.Response {
 				}
 			}
 			//更新投稿状态
-			video.Path = videoFilePath
+			video.Path = path.Join("video", id, newVideoName)
 		}
 		//更新封面
 		vimgFile, _ := c.FormFile("vimg")
@@ -104,7 +104,7 @@ func (service *UpdateVideoService) Update(c *gin.Context) serializer.Response {
 					Error: err.Error(),
 				}
 			}
-			video.Cover = path.Join(id, newVimgName)
+			video.Cover = path.Join("cover", id, newVimgName)
 		}
 
 		if err := model.DB.Save(&video).Error; err != nil {

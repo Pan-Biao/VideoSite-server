@@ -12,6 +12,7 @@ type User struct {
 	CreatedAt    int64  `json:"created_at"`
 	UpdatedAt    int64  `json:"updated_at"`
 	Root         bool   `json:"root"`
+	Info         string `json:"info"`
 }
 
 // BuildUser 序列化用户
@@ -25,6 +26,7 @@ func BuildUser(user model.User) User {
 		CreatedAt:    user.CreatedAt.Unix(),
 		UpdatedAt:    user.UpdatedAt.Unix(),
 		Root:         user.Root,
+		Info:         user.Info,
 	}
 }
 

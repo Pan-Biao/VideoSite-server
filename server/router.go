@@ -13,13 +13,19 @@ import (
 func NewRouter() *gin.Engine {
 	r := gin.Default()
 
-	// 中间件, 顺序不能改
-	r.Use(middleware.Session(os.Getenv("SESSION_SECRET"))) //Session保持登录状态
-	r.Use(middleware.Cors())                               //跨域
-	r.Use(middleware.CurrentUser())                        //用户登录状态
+	//跨域
+	r.Use(middleware.Cors())
+
+	//用户静态资源
+	file := r.Group("/")
+	file.Static("/assets", "./assets")
+	file.StaticFS("file", http.Dir("G:/videoResources"))
 
 	// 路由
 	v1 := r.Group("/api/v1")
+	// 中间件, 顺序不能改
+	v1.Use(middleware.Session(os.Getenv("SESSION_SECRET"))) //Session保持登录状态
+	v1.Use(middleware.CurrentUser())                        //用户登录状态
 	{
 		v1.POST("ping", api.Ping)
 		// 用户注册
@@ -45,13 +51,20 @@ func NewRouter() *gin.Engine {
 		}
 
 		//视频接口
-		v1.GET("video/:id", api.ShowVideo)            //视频信息
+		v1.GET("video/:vid", api.ShowVideo)           //视频信息
 		v1.POST("videos/search", api.ListSearchVideo) //获取视频列表
-		v1.GET("video/play/:vid", api.PlayVideo)      //视频文件
+		// v1.POST("video/play/:vid", api.PlayVideo)         //视频文件
+		v1.POST("video/play/:vid", api.PlayNumber) //增加视频播放数
 		{
 			authed.POST("video", api.CreateVideo)        //创建视频
 			authed.PUT("video/:vid", api.UpdateVideo)    //更新视频
 			authed.DELETE("video/:vid", api.DeleteVideo) //删除视频
+		}
+		//评论接口
+		v1.GET("comment/:vid", api.ListComment)
+		{
+			authed.POST("comment/:vid", api.CreateComment)
+			authed.DELETE("comment/:cid", api.DeleteComment)
 		}
 
 		//关注接口
@@ -77,9 +90,6 @@ func NewRouter() *gin.Engine {
 			authed.DELETE("collection/:cid", api.DeleteCollection)
 		}
 
-		//用户静态资源
-		v1.Static("/assets", "./assets")
-		v1.StaticFS("/cover", http.Dir("G:/videoResources/cover"))
 	}
 
 	return r

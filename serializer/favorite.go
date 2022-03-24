@@ -7,7 +7,7 @@ type Favorite struct {
 	Name string `json:"name"`
 }
 
-// BuildSubArea 序列化视频
+// 序列化收藏夹
 func BuildFavorite(item model.Favorite) Favorite {
 	return Favorite{
 		ID:   item.ID,
@@ -15,7 +15,7 @@ func BuildFavorite(item model.Favorite) Favorite {
 	}
 }
 
-// BuildSubAreas 序列化视频列表
+// 序列化收藏夹列表
 func BuildFavorites(items []model.Favorite) (favorites []Favorite) {
 	for _, item := range items {
 		favorite := BuildFavorite(item)

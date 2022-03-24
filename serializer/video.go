@@ -17,6 +17,7 @@ type Video struct {
 	Said       uint   `json:"said"`
 	Cover      string `json:"cover"`
 	User       User   `json:"user"`
+	Path       string `json:"path"`
 }
 
 // BuildVideo 序列化视频
@@ -35,6 +36,7 @@ func BuildVideo(item model.Video) Video {
 		Uid:        item.Uid,
 		Said:       item.Said,
 		Cover:      item.Cover,
+		Path:       item.Path,
 		User:       buildUser,
 	}
 }
