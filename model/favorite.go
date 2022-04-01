@@ -2,7 +2,7 @@ package model
 
 import "gorm.io/gorm"
 
-type Favorite struct {
+type Favorites struct {
 	gorm.Model
 	Name      string
 	Collector uint

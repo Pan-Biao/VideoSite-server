@@ -27,12 +27,12 @@ func (service *CreateFavoriteService) Create(c *gin.Context) serializer.Response
 		}
 	}
 
-	favorite := model.Favorite{
+	favorites := model.Favorites{
 		Collector: user.ID,
 		Name:      service.Name,
 	}
 
-	if err := model.DB.Create(&favorite).Error; err != nil {
+	if err := model.DB.Create(&favorites).Error; err != nil {
 		return serializer.Response{
 			Code:  50001,
 			Msg:   "收藏夹创建失败",
@@ -42,13 +42,13 @@ func (service *CreateFavoriteService) Create(c *gin.Context) serializer.Response
 
 	return serializer.Response{
 		Code: 200,
-		Data: serializer.BuildFavorite(favorite),
+		Data: serializer.BuildFavorites(favorites),
 		Msg:  "成功",
 	}
 }
 
 func CheckingFavorite(user model.User, name string) bool {
-	favorite := model.Favorite{}
-	model.DB.Where("name = ? and collector = ?", name, user.ID).First(&favorite)
-	return favorite.Name != ""
+	favorites := model.Favorites{}
+	model.DB.Where("name = ? and collector = ?", name, user.ID).First(&favorites)
+	return favorites.Name != ""
 }

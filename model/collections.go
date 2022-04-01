@@ -6,5 +6,5 @@ type Collection struct {
 	gorm.Model
 	Collector  uint
 	Collection uint
-	Favorite   uint
+	Favorites  uint
 }

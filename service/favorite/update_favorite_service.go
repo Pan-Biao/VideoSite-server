@@ -21,8 +21,8 @@ func (service *UpdateFavoriteService) Update(c *gin.Context) serializer.Response
 		}
 	}
 	fid := c.Param("fid")
-	favorite := model.Favorite{}
-	if err := model.DB.Where("collector = ? and id = ?", user.ID, fid).First(&favorite).Error; err != nil {
+	favorites := model.Favorites{}
+	if err := model.DB.Where("collector = ? and id = ?", user.ID, fid).First(&favorites).Error; err != nil {
 		return serializer.Response{
 			Code:  404,
 			Msg:   "收藏夹不存在",
@@ -36,9 +36,9 @@ func (service *UpdateFavoriteService) Update(c *gin.Context) serializer.Response
 		}
 	}
 	//更新收藏夹信息
-	favorite.Name = service.Name
+	favorites.Name = service.Name
 
-	if err := model.DB.Save(&favorite).Error; err != nil {
+	if err := model.DB.Save(&favorites).Error; err != nil {
 		return serializer.Response{
 			Code:  60002,
 			Msg:   "收藏夹更新失败",
@@ -48,7 +48,7 @@ func (service *UpdateFavoriteService) Update(c *gin.Context) serializer.Response
 
 	return serializer.Response{
 		Code: 200,
-		Data: serializer.BuildFavorite(favorite),
+		Data: serializer.BuildFavorites(favorites),
 		Msg:  "成功",
 	}
 }

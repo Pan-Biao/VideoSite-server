@@ -51,6 +51,17 @@ func UserMe(c *gin.Context) {
 	c.JSON(200, res)
 }
 
+//获取用户信息
+func UserInformation(c *gin.Context) {
+	service := user.GetUserInformationService{}
+	if err := c.ShouldBind(&service); err == nil {
+		res := service.Get(c)
+		c.JSON(200, res)
+	} else {
+		c.JSON(500, ErrorResponse(err))
+	}
+}
+
 // UserLogout 用户登出
 func UserLogout(c *gin.Context) {
 	s := sessions.Default(c)

@@ -20,8 +20,8 @@ func (service *DeleteFavoriteService) Delete(c *gin.Context) serializer.Response
 		}
 	}
 	fid := c.Param("fid")
-	favorite := model.Favorite{}
-	if err := model.DB.Where("collector = ? and id = ?", user.ID, fid).First(&favorite).Error; err != nil {
+	favorites := model.Favorites{}
+	if err := model.DB.Where("collector = ? and id = ?", user.ID, fid).First(&favorites).Error; err != nil {
 		return serializer.Response{
 			Code:  404,
 			Msg:   "收藏夹不存在",
@@ -29,7 +29,7 @@ func (service *DeleteFavoriteService) Delete(c *gin.Context) serializer.Response
 		}
 	}
 
-	if err := model.DB.Delete(&favorite).Error; err != nil {
+	if err := model.DB.Delete(&favorites).Error; err != nil {
 		return serializer.Response{
 			Code:  60003,
 			Msg:   "收藏夹删除失败",

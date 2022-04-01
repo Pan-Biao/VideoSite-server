@@ -31,7 +31,7 @@ func (service *CreateCollectionService) Create(c *gin.Context) serializer.Respon
 	}
 	collection := model.Collection{}
 	if service.FID != 0 {
-		favorite := model.Favorite{}
+		favorite := model.Favorites{}
 		if err := model.DB.First(&favorite, service.FID).Error; err != nil {
 			return serializer.Response{
 				Code:  404,
@@ -42,7 +42,7 @@ func (service *CreateCollectionService) Create(c *gin.Context) serializer.Respon
 		collection = model.Collection{
 			Collection: video.ID,
 			Collector:  user.ID,
-			Favorite:   service.FID,
+			Favorites:  service.FID,
 		}
 	} else {
 		collection = model.Collection{

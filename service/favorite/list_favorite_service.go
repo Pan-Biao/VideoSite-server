@@ -12,8 +12,8 @@ type ListFavoriteService struct{}
 
 // List 分区列表服务
 func (service *ListFavoriteService) List(c *gin.Context) serializer.Response {
-	favorite := []model.Favorite{}
-	err := model.DB.Find(&favorite).Error
+	favorites := []model.Favorites{}
+	err := model.DB.Find(&favorites).Error
 
 	if err != nil {
 		return serializer.Response{
@@ -25,7 +25,7 @@ func (service *ListFavoriteService) List(c *gin.Context) serializer.Response {
 
 	return serializer.Response{
 		Code: 200,
-		Data: serializer.BuildFavorites(favorite),
+		Data: serializer.BuildListFavorites(favorites),
 		Msg:  "成功",
 	}
 }

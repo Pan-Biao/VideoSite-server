@@ -32,6 +32,8 @@ func NewRouter() *gin.Engine {
 		v1.POST("user/register", api.UserRegister)
 		// 用户登录
 		v1.POST("user/login", api.UserLogin)
+		//获取用户信息
+		v1.GET("user/:id", api.UserInformation)
 		// 需要登录保护的
 		authed := v1.Group("/")
 		authed.Use(middleware.AuthRequired())
@@ -51,8 +53,8 @@ func NewRouter() *gin.Engine {
 		}
 
 		//视频接口
-		v1.GET("video/:vid", api.ShowVideo)           //视频信息
-		v1.POST("videos/search", api.ListSearchVideo) //获取视频列表
+		v1.GET("video/:vid", api.ShowVideo)        //视频信息
+		v1.POST("video/list", api.ListSearchVideo) //获取视频列表
 		// v1.POST("video/play/:vid", api.PlayVideo)         //视频文件
 		v1.POST("video/play/:vid", api.PlayNumber) //增加视频播放数
 		{

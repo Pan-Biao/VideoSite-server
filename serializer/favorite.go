@@ -8,7 +8,7 @@ type Favorite struct {
 }
 
 // 序列化收藏夹
-func BuildFavorite(item model.Favorite) Favorite {
+func BuildFavorites(item model.Favorites) Favorite {
 	return Favorite{
 		ID:   item.ID,
 		Name: item.Name,
@@ -16,9 +16,9 @@ func BuildFavorite(item model.Favorite) Favorite {
 }
 
 // 序列化收藏夹列表
-func BuildFavorites(items []model.Favorite) (favorites []Favorite) {
+func BuildListFavorites(items []model.Favorites) (favorites []Favorite) {
 	for _, item := range items {
-		favorite := BuildFavorite(item)
+		favorite := BuildFavorites(item)
 		favorites = append(favorites, favorite)
 	}
 	return favorites

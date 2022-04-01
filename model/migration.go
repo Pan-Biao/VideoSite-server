@@ -9,5 +9,6 @@ func migration() {
 	_ = DB.AutoMigrate(&SubArea{})
 	_ = DB.AutoMigrate(&Follow{})
 	_ = DB.AutoMigrate(&Collection{})
-	_ = DB.AutoMigrate(&Favorite{})
+	_ = DB.AutoMigrate(&Favorites{})
+	_ = DB.AutoMigrate(&Comment{})
 }
