@@ -3,8 +3,8 @@ package model
 import (
 	"log"
 	"os"
-	"vodeoWeb/util"
 	"time"
+	"vodeoWeb/util"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"

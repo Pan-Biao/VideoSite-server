@@ -35,7 +35,14 @@ func (service *DeleteVideoService) Delete(c *gin.Context) serializer.Response {
 			}
 		}
 
-		if err := os.Remove(video.Path); err != nil {
+		if err := os.Remove("G:/videoResources/" + video.Path); err != nil {
+			return serializer.Response{
+				Code:  50003,
+				Msg:   "视频删除失败",
+				Error: err.Error(),
+			}
+		}
+		if err := os.Remove("G:/videoResources/" + video.Cover); err != nil {
 			return serializer.Response{
 				Code:  50003,
 				Msg:   "视频删除失败",

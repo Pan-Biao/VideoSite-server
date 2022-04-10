@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"vodeoWeb/cache"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
 
@@ -11,9 +12,15 @@ import (
 // CurrentUser 获取登录用户
 func CurrentUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		session := sessions.Default(c)
-		uid := session.Get("user_id")
-		if uid != nil {
+		var uid string
+		token := c.GetHeader("Authorization")
+		if token != "" {
+			uid, _ = cache.GetUserByToken(token)
+		} else {
+			session := sessions.Default(c)
+			uid, _ = session.Get("user_id").(string)
+		}
+		if uid != "" {
 			user, err := model.GetUser(uid)
 			if err == nil {
 				c.Set("user", &user)

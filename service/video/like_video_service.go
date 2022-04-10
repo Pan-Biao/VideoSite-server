@@ -1,7 +1,6 @@
 package video
 
 import (
-	"log"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
 
@@ -9,9 +8,9 @@ import (
 )
 
 // 视频播放服务
-type PlayVideoService struct{}
+type LikeVideoService struct{}
 
-func (service *PlayVideoService) Add(c *gin.Context) {
+func (service *LikeVideoService) Like(c *gin.Context) {
 	//查找对应视频
 	vid := c.Param("vid")
 	video := model.Video{}
@@ -24,8 +23,7 @@ func (service *PlayVideoService) Add(c *gin.Context) {
 		})
 	}
 
-	log.Println(video.PlayNumber)
-	video.PlayNumber = video.PlayNumber + 1
+	video.LikeNumber = video.LikeNumber + 1
 	//播放量加1
 	if err := model.DB.Save(&video).Error; err != nil {
 		c.JSON(500, serializer.Response{

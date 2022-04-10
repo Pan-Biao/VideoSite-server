@@ -18,6 +18,7 @@ type Video struct {
 	Cover      string `json:"cover"`
 	User       User   `json:"user"`
 	Path       string `json:"path"`
+	LikeNumber int    `json:"like_number"`
 }
 
 // BuildVideo 序列化视频
@@ -37,6 +38,7 @@ func BuildVideo(item model.Video) Video {
 		Said:       item.Said,
 		Cover:      item.Cover,
 		Path:       item.Path,
+		LikeNumber: item.LikeNumber,
 		User:       buildUser,
 	}
 }
@@ -45,12 +47,12 @@ func BuildVideo(item model.Video) Video {
 type Videos struct {
 	PageNumber int     `json:"page_number"`
 	Number     int     `json:"number"`
+	Total      int     `json:"total"`
 	Videos     []Video `json:"videos"`
 }
 
-func BuildVideos(items []model.Video, pageNumber int, number int) (videos Videos) {
+func BuildVideos(items []model.Video, pageNumber int, number int, total int) (videos Videos) {
 	vs := []Video{}
-	//查询id对应的用户数据
 	for _, item := range items {
 		video := BuildVideo(item)
 		vs = append(vs, video)
@@ -58,5 +60,6 @@ func BuildVideos(items []model.Video, pageNumber int, number int) (videos Videos
 	videos.Videos = vs
 	videos.PageNumber = pageNumber
 	videos.Number = number
+	videos.Total = total
 	return videos
 }

@@ -7,13 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ListFavoriteService 分区列表
+// ListFavoriteService 收藏夹列表
 type ListFavoriteService struct{}
 
-// List 分区列表服务
+// List 收藏夹列表服务
 func (service *ListFavoriteService) List(c *gin.Context) serializer.Response {
 	favorites := []model.Favorites{}
-	err := model.DB.Find(&favorites).Error
+	uid := c.Param("uid")
+	err := model.DB.Where("collector = ?", uid).Find(&favorites).Error
 
 	if err != nil {
 		return serializer.Response{

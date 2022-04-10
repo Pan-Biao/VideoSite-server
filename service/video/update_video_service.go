@@ -4,10 +4,10 @@ import (
 	"log"
 	"os"
 	"path"
-	"regexp"
 	"strconv"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 	"vodeoWeb/util"
 
 	"github.com/gin-gonic/gin"
@@ -18,12 +18,11 @@ type UpdateVideoService struct {
 	Title *string `form:"title" json:"title" binding:"min=1,max=30"`
 	Info  *string `form:"info" json:"info" binding:"min=0,max=300"`
 	Said  uint    `form:"said" json:"said" `
-	State *bool   `form:"state" json:"state" `
 }
 
 // 视频更新
 func (service *UpdateVideoService) Update(c *gin.Context) serializer.Response {
-	if compressStr(*service.Title) == "" {
+	if funcs.CompressStr(*service.Title) == "" {
 		return serializer.Response{
 			Code: 404,
 			Msg:  "title不能为空",
@@ -51,9 +50,6 @@ func (service *UpdateVideoService) Update(c *gin.Context) serializer.Response {
 		}
 
 		//更新视频信息
-		if service.State != nil {
-			video.State = *service.State
-		}
 		if service.Said != 0 {
 			video.Said = service.Said
 		}
@@ -129,15 +125,4 @@ func (service *UpdateVideoService) Update(c *gin.Context) serializer.Response {
 		}
 	}
 
-}
-
-//利用正则表达式压缩字符串，去除空格或制表符
-func compressStr(str string) string {
-	if str == "" {
-		return ""
-	}
-	//匹配一个或多个空白符的正则表达式
-	strss := "\\s+"
-	reg := regexp.MustCompile(strss)
-	return reg.ReplaceAllString(str, "")
 }

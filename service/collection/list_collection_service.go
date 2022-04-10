@@ -9,7 +9,7 @@ import (
 
 // ListCollectionService 分区列表
 type ListCollectionService struct {
-	FID uint `from:"fid" json:"fid" `
+	FID uint `form:"fid" json:"fid" `
 }
 
 // List 分区列表服务

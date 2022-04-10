@@ -17,7 +17,8 @@ func BuildSubArea(item model.SubArea) SubArea {
 }
 
 // BuildSubAreas 序列化视频列表
-func BuildSubAreas(items []model.SubArea) (subAreas []SubArea) {
+func BuildSubAreas(items []model.SubArea) []SubArea {
+	subAreas := []SubArea{}
 	for _, item := range items {
 		subArea := BuildSubArea(item)
 		subAreas = append(subAreas, subArea)

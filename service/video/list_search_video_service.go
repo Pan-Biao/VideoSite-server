@@ -4,7 +4,10 @@ import (
 	"log"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 	"vodeoWeb/util"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Sorts 排序条件列表
@@ -24,9 +27,11 @@ type ListSearchVideoService struct {
 }
 
 // List 视频列表服务
-func (service *ListSearchVideoService) List() serializer.Response {
+func (service *ListSearchVideoService) List(c *gin.Context) serializer.Response {
 	videos := []model.Video{}
 	db := model.DB
+	//总长度
+	var total int64
 	//每页的长度 不传入默认20 传入0为不限制长度,此时不需要传入当前页PageNumber
 	number := 0
 	if service.Number == nil {
@@ -44,13 +49,14 @@ func (service *ListSearchVideoService) List() serializer.Response {
 			if v.Field != "" {
 				//拼接字符串
 				strs := []string{v.Field, " ", v.Sort}
-				db.Order(util.Join(strs))
+				db = db.Order(util.Join(strs))
 			}
 		}
 	}
 	//判断视频状态
-	//这里需要先使用一次db.Where(),才能连接后续的db.Or()
-	db.Where("state = ?", true)
+	if !funcs.CheckRoot(c) {
+		db = db.Where("state = ?", true)
+	}
 	//是否分区查找
 	if service.SAID != 0 {
 		log.Println("SAID:", service.SAID)
@@ -68,12 +74,12 @@ func (service *ListSearchVideoService) List() serializer.Response {
 			if v != "" {
 				str := util.JoinLike(v)
 				//先查找标题
-				db.Or("title like ?", str)
+				db = db.Where("title like ?", str)
 				//然后查找昵称
 				users := []model.User{}
 				model.DB.Where("nickname like ?", str).Find(&users)
 				for _, u := range users {
-					db.Or("uid = ?", u.ID)
+					db = db.Or("uid = ?", u.ID)
 				}
 			}
 		}
@@ -84,7 +90,7 @@ func (service *ListSearchVideoService) List() serializer.Response {
 	if service.PageNumber > 1 && number > 0 {
 		log.Println("Offset:", number)
 		pageNumber = service.PageNumber
-		db.Offset((pageNumber - 1) * number)
+		db = db.Offset((pageNumber - 1) * number)
 	}
 	//查询
 	if err := db.Find(&videos).Error; err != nil {
@@ -94,10 +100,19 @@ func (service *ListSearchVideoService) List() serializer.Response {
 			Error: err.Error(),
 		}
 	}
+	//查询长度
+	db = db.Limit(-1).Offset(-1)
+	if err := db.Count(&total).Error; err != nil {
+		return serializer.Response{
+			Code:  50000,
+			Msg:   "视频查询错误",
+			Error: err.Error(),
+		}
+	}
 	//反回数据
 	return serializer.Response{
 		Code: 200,
-		Data: serializer.BuildVideos(videos, pageNumber, number),
+		Data: serializer.BuildVideos(videos, pageNumber, number, int(total)),
 		Msg:  "成功",
 	}
 }

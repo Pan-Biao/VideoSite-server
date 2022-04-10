@@ -8,8 +8,8 @@ import (
 )
 
 type CreateCollectionService struct {
-	FID uint `from:"fid" json:"fid" `
-	CID uint `from:"cid" json:"cid" binding:"required"`
+	FID uint `form:"fid" json:"fid" `
+	CID uint `form:"cid" json:"cid" binding:"required"`
 }
 
 // CreateCollectionService 收藏的服务

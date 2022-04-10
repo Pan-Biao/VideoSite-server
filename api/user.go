@@ -1,6 +1,7 @@
 package api
 
 import (
+	"vodeoWeb/cache"
 	"vodeoWeb/serializer"
 	"vodeoWeb/service/user"
 
@@ -30,6 +31,24 @@ func UserLogin(c *gin.Context) {
 	}
 }
 
+// UserTokenRefresh 用户刷新token接口
+func UserTokenRefresh(c *gin.Context) {
+	currUser := CurrentUser(c)
+	service := user.UserTokenRefreshService{}
+	res := service.Refresh(c, currUser)
+	c.JSON(200, res)
+}
+
+// UserMe 用户详情
+func UserMe(c *gin.Context) {
+	user := CurrentUser(c)
+	res := serializer.BuildUser(*user)
+	c.JSON(200, serializer.Response{
+		Code: 200,
+		Data: res,
+	})
+}
+
 // UpdateUser 修改用户信息接口
 func UpdateUser(c *gin.Context) {
 	service := user.UpdateUserService{}
@@ -39,16 +58,6 @@ func UpdateUser(c *gin.Context) {
 	} else {
 		c.JSON(500, ErrorResponse(err))
 	}
-}
-
-// UserMe 用户详情
-func UserMe(c *gin.Context) {
-	user := CurrentUser(c)
-	res := serializer.Response{
-		Code: 200,
-		Data: serializer.BuildUser(*user),
-		Msg:  "成功"}
-	c.JSON(200, res)
 }
 
 //获取用户信息
@@ -62,13 +71,53 @@ func UserInformation(c *gin.Context) {
 	}
 }
 
+//用户列表接口
+func UserList(c *gin.Context) {
+	service := user.GetUserListService{}
+	if err := c.ShouldBind(&service); err == nil {
+		res := service.List(c)
+		c.JSON(200, res)
+	} else {
+		c.JSON(500, ErrorResponse(err))
+	}
+}
+
+//用户封禁
+func UserSuspend(c *gin.Context) {
+	service := user.UserSuspendService{}
+	if err := c.ShouldBind(&service); err == nil {
+		res := service.Suspend(c)
+		c.JSON(200, res)
+	} else {
+		c.JSON(500, ErrorResponse(err))
+	}
+}
+
+//用户解封
+func UserUnseal(c *gin.Context) {
+	service := user.UserUnsealService{}
+	if err := c.ShouldBind(&service); err == nil {
+		res := service.Unseal(c)
+		c.JSON(200, res)
+	} else {
+		c.JSON(500, ErrorResponse(err))
+	}
+}
+
 // UserLogout 用户登出
 func UserLogout(c *gin.Context) {
-	s := sessions.Default(c)
-	s.Clear()
-	s.Save()
+	// 移动端登出
+	token := c.GetHeader("X-Token")
+	if token != "" {
+		_ = cache.DelUserToken(token)
+	} else {
+		// web端登出
+		s := sessions.Default(c)
+		s.Clear()
+		s.Save()
+	}
 	c.JSON(200, serializer.Response{
-		Code: 200,
+		Code: 0,
 		Msg:  "登出成功",
 	})
 }

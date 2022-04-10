@@ -13,4 +13,5 @@ type Video struct {
 	Uid        uint
 	Said       uint
 	Cover      string
+	LikeNumber int
 }

@@ -11,4 +11,5 @@ func migration() {
 	_ = DB.AutoMigrate(&Collection{})
 	_ = DB.AutoMigrate(&Favorites{})
 	_ = DB.AutoMigrate(&Comment{})
+	_ = DB.AutoMigrate(&Carousel{})
 }

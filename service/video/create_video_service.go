@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 	"vodeoWeb/util"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +25,7 @@ const DefaultImgPath = "G:/videoResources/cover"
 
 // 视频投稿的服务
 func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
+
 	//获取当前用户
 	user := model.User{}
 	if d, _ := c.Get("user"); d != nil {
@@ -41,47 +43,42 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 		Uid:        user.ID,
 		Said:       service.Said,
 	}
-
-	model.DB.Create(&video)
-
+	log.Println("--------------------11111111111----------------------------------------")
+	funcs.SQLErr(c, model.DB.Create(&video).Error)
+	log.Println("----------------------222222222222--------------------------------------")
 	id := strconv.FormatUint(uint64(user.ID), 10)
 	vid := strconv.FormatUint(uint64(video.ID), 10)
 	//上传视频
-	if videoFile, err := c.FormFile("video"); err != nil {
-		model.DB.Delete(&video)
-		return serializer.Response{
-			Code:  50005,
-			Msg:   "上传视频失败,可能是文件名太长",
-			Error: err.Error(),
-		}
-	} else {
-		log.Println(videoFile.Filename)
-		newVideoName := vid + util.Intercept(videoFile.Filename)
+	{
+		log.Println("-------------------33333333333333333-----------------------------------------")
+		videoFile, head, err := c.Request.FormFile("video")
+		funcs.FileErr(c, err, func() {
+			funcs.SQLErr(c, model.DB.Delete(&video).Error)
+		})
+		log.Println("-------------------444444444444444444-----------------------------------------")
+		//读取
+		log.Println(head.Filename)
+		newVideoName := vid + util.Intercept(head.Filename)
 		log.Println(newVideoName)
 		videoDst := path.Join(DefaultVideoPath, id)
 		os.MkdirAll(videoDst, 0777)
 		videoFilePath := path.Join(DefaultVideoPath, id, newVideoName)
 		log.Println(videoFilePath)
+
 		//保存video文件
-		if c.SaveUploadedFile(videoFile, videoFilePath) != nil {
-			model.DB.Delete(&video)
-			return serializer.Response{
-				Code:  500006,
-				Msg:   "读取文件错误",
-				Error: err.Error(),
-			}
-		}
+		funcs.SaveFile(c, &videoFile, videoFilePath)
+		// funcs.SaveFileErr(c, c.SaveUploadedFile(videoFile, videoFilePath), func() {
+		// 	funcs.SQLErr(c, model.DB.Delete(&video).Error)
+		// })
 		video.Path = path.Join("video", id, newVideoName)
 	}
+
 	//上传图片
-	if vimgFile, err := c.FormFile("vimg"); err != nil {
-		model.DB.Delete(&video)
-		return serializer.Response{
-			Code:  50005,
-			Msg:   "上传视频封面失败,可能是文件名太长",
-			Error: err.Error(),
-		}
-	} else {
+	{
+		vimgFile, err := c.FormFile("vimg")
+		funcs.FileErr(c, err, func() {
+			funcs.SQLErr(c, model.DB.Delete(&video).Error)
+		})
 		log.Println(vimgFile.Filename)
 		//上传
 		newVimgName := vid + util.Intercept(vimgFile.Filename)
@@ -101,14 +98,12 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 				Error: err.Error(),
 			}
 		}
-
 		video.Cover = path.Join("cover", id, newVimgName)
-
 	}
 
 	//更新投稿状态
 	video.State = true
-	model.DB.Save(&video)
+	funcs.SQLErr(c, model.DB.Save(&video).Error)
 
 	return serializer.Response{
 		Code: 200,

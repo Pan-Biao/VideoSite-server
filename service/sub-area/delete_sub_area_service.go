@@ -3,6 +3,7 @@ package subArea
 import (
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,24 +13,16 @@ type DeleteSubAreaService struct{}
 
 // 分区删除
 func (service *DeleteSubAreaService) Delete(c *gin.Context) serializer.Response {
-	//获取当前用户
-	user := model.User{}
-	if d, _ := c.Get("user"); d != nil {
-		if u, ok := d.(*model.User); ok {
-			user = *u
-		}
-	}
-	if !user.Root {
+	if !funcs.CheckRoot(c) {
 		return serializer.Response{
 			Code: 9999,
 			Msg:  "没有权限",
 		}
 	}
-	id := c.Param("id")
-	subArea := model.SubArea{}
-	err := model.DB.First(&subArea, id).Error
 
-	if err != nil {
+	said := c.Param("said")
+	subArea := model.SubArea{}
+	if err := model.DB.First(&subArea, said).Error; err != nil {
 		return serializer.Response{
 			Code:  404,
 			Msg:   "分区不存在",
@@ -37,8 +30,7 @@ func (service *DeleteSubAreaService) Delete(c *gin.Context) serializer.Response 
 		}
 	}
 
-	err = model.DB.Delete(&subArea).Error
-	if err != nil {
+	if err := model.DB.Delete(&subArea).Error; err != nil {
 		return serializer.Response{
 			Code:  60003,
 			Msg:   "分区删除失败",

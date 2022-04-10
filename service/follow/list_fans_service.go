@@ -13,15 +13,9 @@ type ListFansService struct{}
 // List 分区列表服务
 func (service *ListFansService) List(c *gin.Context) serializer.Response {
 	follow := []model.Follow{}
-	//获取当前用户
-	user := model.User{}
-	if d, _ := c.Get("user"); d != nil {
-		if u, ok := d.(*model.User); ok {
-			user = *u
-		}
-	}
+	uid := c.Param("uid")
 
-	if err := model.DB.Where("follower = ?", user.ID).Find(&follow).Error; err != nil {
+	if err := model.DB.Where("follower = ?", uid).Find(&follow).Error; err != nil {
 		return serializer.Response{
 			Code:  50000,
 			Msg:   "查询错误",

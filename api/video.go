@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"vodeoWeb/service/video"
 
 	"github.com/gin-gonic/gin"
@@ -10,6 +11,7 @@ import (
 func CreateVideo(c *gin.Context) {
 	service := video.CreateVideoService{}
 	if err := c.ShouldBind(&service); err == nil {
+		log.Println("--------------------11111111111----------------------------------------")
 		res := service.Create(c)
 		c.JSON(200, res)
 	} else {
@@ -28,7 +30,7 @@ func ShowVideo(c *gin.Context) {
 func ListSearchVideo(c *gin.Context) {
 	service := video.ListSearchVideoService{}
 	if err := c.ShouldBind(&service); err == nil {
-		res := service.List()
+		res := service.List(c)
 		c.JSON(200, res)
 	} else {
 		c.JSON(500, ErrorResponse(err))
@@ -54,12 +56,41 @@ func DeleteVideo(c *gin.Context) {
 }
 
 // PlayVideo 视频播放接口
-// func PlayVideo(c *gin.Context) {
-// 	service := video.PlayVideoService{}
-// 	service.Play(c)
-// }
-
 func PlayNumber(c *gin.Context) {
 	serice := video.PlayVideoService{}
 	serice.Add(c)
+}
+
+//点赞
+func LikeVideo(c *gin.Context) {
+	serice := video.LikeVideoService{}
+	serice.Like(c)
+}
+
+//不点赞
+func UnLikeVideo(c *gin.Context) {
+	serice := video.UnLikeVideoService{}
+	serice.UnLike(c)
+}
+
+//视频封禁
+func VideoSuspend(c *gin.Context) {
+	service := video.VideoSuspendService{}
+	if err := c.ShouldBind(&service); err == nil {
+		res := service.Suspend(c)
+		c.JSON(200, res)
+	} else {
+		c.JSON(500, ErrorResponse(err))
+	}
+}
+
+//视频解封
+func VideoUnseal(c *gin.Context) {
+	service := video.VideoUnsealService{}
+	if err := c.ShouldBind(&service); err == nil {
+		res := service.Unseal(c)
+		c.JSON(200, res)
+	} else {
+		c.JSON(500, ErrorResponse(err))
+	}
 }
