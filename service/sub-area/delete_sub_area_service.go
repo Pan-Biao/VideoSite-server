@@ -30,7 +30,7 @@ func (service *DeleteSubAreaService) Delete(c *gin.Context) serializer.Response 
 		}
 	}
 
-	if err := model.DB.Delete(&subArea).Error; err != nil {
+	if err := model.DB.Unscoped().Delete(&subArea).Error; err != nil {
 		return serializer.Response{
 			Code:  60003,
 			Msg:   "分区删除失败",

@@ -35,4 +35,8 @@ func (service *PlayVideoService) Add(c *gin.Context) {
 		})
 	}
 
+	c.JSON(200, serializer.Response{
+		Code: 200,
+		Data: true,
+	})
 }

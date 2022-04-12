@@ -58,7 +58,7 @@ func (service *DeleteVideoService) Delete(c *gin.Context) serializer.Response {
 			}
 		}
 
-		if err = model.DB.Delete(&video).Error; err != nil {
+		if err = model.DB.Unscoped().Delete(&video).Error; err != nil {
 			return serializer.Response{
 				Code:  50003,
 				Msg:   "视频删除失败",

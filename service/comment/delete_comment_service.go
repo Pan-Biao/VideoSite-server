@@ -3,6 +3,7 @@ package comment
 import (
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,32 +14,26 @@ type DeleteCommentService struct{}
 // 分区删除
 func (service *DeleteCommentService) Delete(c *gin.Context) serializer.Response {
 	//获取当前用户
-	user := model.User{}
-	if d, _ := c.Get("user"); d != nil {
-		if u, ok := d.(*model.User); ok {
-			user = *u
-		}
-	}
+	user := funcs.GetUser(c)
+
 	cid := c.Param("cid")
 	comment := model.Comment{}
-	if err := model.DB.Where("commentator = ? and id = ?", user.ID, cid).First(&comment).Error; err != nil {
+	db := model.DB.Where("commentator = ? and id = ?", user.ID, cid)
+	if re := funcs.SQLErr(db.First(&comment).Error); re != nil {
 		return serializer.Response{
-			Code:  404,
-			Msg:   "评论不存在",
-			Error: err.Error(),
+			Code: 404,
+			Data: false,
+			Msg:  "评论不存在",
 		}
 	}
 
-	if err := model.DB.Delete(&comment).Error; err != nil {
-		return serializer.Response{
-			Code:  60003,
-			Msg:   "评论删除失败",
-			Error: err.Error(),
-		}
+	if re := funcs.SQLErr(model.DB.Unscoped().Delete(&comment).Error); re != nil {
+		return re.(serializer.Response)
 	}
 
 	return serializer.Response{
 		Code: 200,
+		Data: true,
 		Msg:  "成功",
 	}
 }

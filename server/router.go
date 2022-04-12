@@ -33,7 +33,7 @@ func NewRouter() *gin.Engine {
 		// 用户登录
 		v1.POST("user/login", api.UserLogin)
 		//获取用户信息
-		v1.GET("user/:id", api.UserInformation)
+		v1.GET("user/:uid", api.UserInformation)
 		// 需要登录保护的
 		authed := v1.Group("/")
 		authed.Use(middleware.AuthRequired())
@@ -61,6 +61,7 @@ func NewRouter() *gin.Engine {
 			authed.PUT("video/:vid", api.UpdateVideo)         //更新视频
 			authed.DELETE("video/:vid", api.DeleteVideo)      //删除视频
 			authed.POST("video/like/:vid", api.LikeVideo)     //点赞
+			authed.GET("video/islike/:vid", api.IsLikeVideo)  //是否点赞
 			authed.POST("video/unlike/:vid", api.UnLikeVideo) //取消点赞
 		}
 		//评论接口
@@ -68,6 +69,9 @@ func NewRouter() *gin.Engine {
 		{
 			authed.POST("comment/:vid", api.CreateComment)
 			authed.DELETE("comment/:cid", api.DeleteComment)
+			authed.POST("comment/like/:cid", api.LikeComment)
+			authed.POST("comment/unlike/:cid", api.UnLikeComment)
+			authed.GET("comment/islike/list", api.IsLikeComment)
 		}
 
 		//关注接口
@@ -76,11 +80,12 @@ func NewRouter() *gin.Engine {
 		{
 			authed.POST("follow/:fid", api.CreateFollow)
 			authed.DELETE("follow/:fid", api.DeleteFollow)
+			authed.GET("follow/isfollow/:uid", api.IsFollow)
 		}
 
 		//收藏夹接口
 		{
-			authed.GET("favorite/list/:uid", api.ListFavorite)
+			authed.GET("favorite/list", api.ListFavorite)
 			authed.POST("favorite/add", api.CreateFavorite)
 			authed.PUT("favorite/:fid", api.UpdateFavorite)
 			authed.DELETE("favorite/:fid", api.DeleteFavorite)
@@ -90,6 +95,7 @@ func NewRouter() *gin.Engine {
 		{
 			authed.GET("collection/list/:fid", api.ListCollection)
 			authed.POST("collection/add", api.CreateCollection)
+			authed.GET("collection/iscollection/:cid", api.IsCollection)
 			authed.DELETE("collection/:cid", api.DeleteCollection)
 		}
 

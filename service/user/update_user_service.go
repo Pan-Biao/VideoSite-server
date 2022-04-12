@@ -15,7 +15,7 @@ import (
 // UpdateUserService 修改用户信息的服务
 type UpdateUserService struct {
 	Nickname string `form:"nickname" json:"nickname" binding:"min=2,max=8"`
-	Info     string `form:"info" json:"info" binding:"min=1,max=30"`
+	Info     string `form:"info" json:"info" binding:"min=0,max=40"`
 }
 
 const DefaultHeadPortraitPath = "G:/videoResources/head_portrait"

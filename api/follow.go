@@ -17,6 +17,17 @@ func CreateFollow(c *gin.Context) {
 	}
 }
 
+//查询是否关注了
+func IsFollow(c *gin.Context) {
+	service := follow.IsFollowService{}
+	if err := c.ShouldBind(&service); err == nil {
+		res := service.Is(c)
+		c.JSON(200, res)
+	} else {
+		c.JSON(500, ErrorResponse(err))
+	}
+}
+
 // ListFollower 关注列表接口
 func ListFollower(c *gin.Context) {
 	service := follow.ListFollowerService{}

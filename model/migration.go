@@ -4,12 +4,16 @@ package model
 
 func migration() {
 	// 自动迁移模式
-	_ = DB.AutoMigrate(&User{})
-	_ = DB.AutoMigrate(&Video{})
-	_ = DB.AutoMigrate(&SubArea{})
-	_ = DB.AutoMigrate(&Follow{})
-	_ = DB.AutoMigrate(&Collection{})
-	_ = DB.AutoMigrate(&Favorites{})
-	_ = DB.AutoMigrate(&Comment{})
-	_ = DB.AutoMigrate(&Carousel{})
+	_ = DB.AutoMigrate(
+		&User{},
+		&Video{},
+		&SubArea{},
+		&Follow{},
+		&Collection{},
+		&Favorites{},
+		&Comment{},
+		&Carousel{},
+		&VideoLike{},
+		&CommentLike{},
+	)
 }

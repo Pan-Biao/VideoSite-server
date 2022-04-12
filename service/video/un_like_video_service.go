@@ -1,8 +1,10 @@
 package video
 
 import (
+	"log"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,27 +12,42 @@ import (
 // 视频播放服务
 type UnLikeVideoService struct{}
 
-func (service *UnLikeVideoService) UnLike(c *gin.Context) {
+func (service *UnLikeVideoService) UnLike(c *gin.Context) serializer.Response {
 	//查找对应视频
 	vid := c.Param("vid")
-	video := model.Video{}
+	user := funcs.GetUser(c)
 
-	if err := model.DB.First(&video, vid).Error; err != nil {
-		c.JSON(500, serializer.Response{
-			Code:  404,
-			Msg:   "视频不存在",
-			Error: err.Error(),
-		})
+	video, re := funcs.GetVideo(vid)
+	if re != nil {
+		return re.(serializer.Response)
 	}
 
+	videoLike := model.VideoLike{}
+	db := model.DB
+	db = db.Where("uid = ?", user.ID)
+	db = db.Where("vid = ?", video.ID)
+
+	if re := funcs.SQLErr(db.First(&videoLike).Error); re != nil {
+		return serializer.Response{
+			Code: 200,
+			Data: true,
+			Msg:  "已取消点赞",
+		}
+	}
+	log.Println("--------------------------", videoLike)
+	if re := funcs.SQLErr(model.DB.Unscoped().Delete(&videoLike).Error); re != nil {
+		return re.(serializer.Response)
+	}
+
+	//点赞量-1
 	video.LikeNumber = video.LikeNumber - 1
-	//播放量加1
-	if err := model.DB.Save(&video).Error; err != nil {
-		c.JSON(500, serializer.Response{
-			Code:  50002,
-			Msg:   "播放量增加失败",
-			Error: err.Error(),
-		})
+	if re := funcs.SQLErr(model.DB.Save(&video).Error); re != nil {
+		return re.(serializer.Response)
 	}
 
+	return serializer.Response{
+		Code: 200,
+		Data: true,
+		Msg:  "取消点赞成功",
+	}
 }

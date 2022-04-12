@@ -13,6 +13,12 @@ import (
 
 // 验证Root用户
 func CheckRoot(c *gin.Context) bool {
+	user := GetUser(c)
+	return user.Root
+}
+
+//获取当前用户
+func GetUser(c *gin.Context) model.User {
 	//获取当前用户
 	user := model.User{}
 	if d, _ := c.Get("user"); d != nil {
@@ -20,7 +26,20 @@ func CheckRoot(c *gin.Context) bool {
 			user = *u
 		}
 	}
-	return user.Root
+	return user
+}
+
+//获取视频
+func GetVideo(id string) (model.Video, interface{}) {
+	video := model.Video{}
+
+	re := SQLErr(model.DB.First(&video, id).Error)
+
+	if re != nil {
+		return video, re.(serializer.Response)
+	}
+
+	return video, nil
 }
 
 //利用正则表达式压缩字符串，去除空格或制表符
@@ -35,66 +54,53 @@ func CompressStr(str string) string {
 }
 
 //保存文件
-func SaveFile(c *gin.Context, file *multipart.File, str string) {
+func SaveFile(file *multipart.File, str string) interface{} {
 	data, err := ioutil.ReadAll(*file)
 	if err != nil {
 		log.Printf("Read file error: %v", err)
-		FileErr(c, err)
-		return
+		return FileErr(err)
 	}
 
 	err = ioutil.WriteFile(str, data, 0666)
 	if err != nil {
 		log.Printf("Write file error: %v", err)
-		FileErr(c, err)
-		return
+		return FileErr(err)
 	}
+	return nil
 }
 
-// 数据库错误处理
-// f 返回前做什么事情
-func SQLErr(c *gin.Context, err error, f ...func()) {
+// 数据库错误
+func SQLErr(err error) interface{} {
 	if err != nil {
-		for _, v := range f {
-			v()
-		}
-		log.Printf("SQL error: %v", err)
-		c.JSON(200, serializer.Response{
+		return serializer.Response{
 			Code:  999999,
 			Msg:   "数据库出错",
 			Error: err.Error(),
-		})
+		}
 	}
+	return nil
 }
 
-//文件读取错误处理
-// f 返回前做什么事情
-func FileErr(c *gin.Context, err error, f ...func()) {
+//文件读取错误
+func FileErr(err error) interface{} {
 	if err != nil {
-		for _, v := range f {
-			v()
-		}
-		log.Printf("File error: %v", err)
-		c.JSON(200, serializer.Response{
+		return serializer.Response{
 			Code:  999998,
 			Msg:   "读取文件出错",
 			Error: err.Error(),
-		})
+		}
 	}
+	return nil
 }
 
-//文件保存错误处理
-// f 返回前做什么事情
-func SaveFileErr(c *gin.Context, err error, f ...func()) {
+//文件保存错误
+func SaveFileErr(err error) interface{} {
 	if err != nil {
-		for _, v := range f {
-			v()
-		}
-		log.Printf("SaveFile error: %v", err)
-		c.JSON(200, serializer.Response{
+		return serializer.Response{
 			Code:  999997,
 			Msg:   "保存文件出错",
 			Error: err.Error(),
-		})
+		}
 	}
+	return nil
 }

@@ -43,7 +43,7 @@ func (service *ListCommentService) List(c *gin.Context) serializer.Response {
 	if err := db.Find(&comments).Error; err != nil {
 		return serializer.Response{
 			Code:  50000,
-			Msg:   "视频查询错误",
+			Msg:   "评论查询错误",
 			Error: err.Error(),
 		}
 	}

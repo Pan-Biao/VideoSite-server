@@ -43,19 +43,22 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 		Uid:        user.ID,
 		Said:       service.Said,
 	}
-	log.Println("--------------------11111111111----------------------------------------")
-	funcs.SQLErr(c, model.DB.Create(&video).Error)
-	log.Println("----------------------222222222222--------------------------------------")
+
+	if re := funcs.SQLErr(model.DB.Create(&video).Error); re != nil {
+		return re.(serializer.Response)
+	}
+
 	id := strconv.FormatUint(uint64(user.ID), 10)
 	vid := strconv.FormatUint(uint64(video.ID), 10)
 	//上传视频
 	{
-		log.Println("-------------------33333333333333333-----------------------------------------")
 		videoFile, head, err := c.Request.FormFile("video")
-		funcs.FileErr(c, err, func() {
-			funcs.SQLErr(c, model.DB.Delete(&video).Error)
-		})
-		log.Println("-------------------444444444444444444-----------------------------------------")
+
+		if re := funcs.FileErr(err); re != nil {
+			model.DB.Delete(&video)
+			return re.(serializer.Response)
+		}
+
 		//读取
 		log.Println(head.Filename)
 		newVideoName := vid + util.Intercept(head.Filename)
@@ -66,19 +69,22 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 		log.Println(videoFilePath)
 
 		//保存video文件
-		funcs.SaveFile(c, &videoFile, videoFilePath)
-		// funcs.SaveFileErr(c, c.SaveUploadedFile(videoFile, videoFilePath), func() {
-		// 	funcs.SQLErr(c, model.DB.Delete(&video).Error)
-		// })
+		if re := funcs.SaveFile(&videoFile, videoFilePath); re != nil {
+			return re.(serializer.Response)
+		}
+
 		video.Path = path.Join("video", id, newVideoName)
 	}
 
 	//上传图片
 	{
 		vimgFile, err := c.FormFile("vimg")
-		funcs.FileErr(c, err, func() {
-			funcs.SQLErr(c, model.DB.Delete(&video).Error)
-		})
+
+		if re := funcs.FileErr(err); re != nil {
+			model.DB.Delete(&video)
+			return re.(serializer.Response)
+		}
+
 		log.Println(vimgFile.Filename)
 		//上传
 		newVimgName := vid + util.Intercept(vimgFile.Filename)
@@ -90,20 +96,18 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 		imgFilePath := path.Join(DefaultImgPath, id, newVimgName)
 		log.Println(imgFilePath)
 		//保存img文件
-		if c.SaveUploadedFile(vimgFile, imgFilePath) != nil {
+		if re := funcs.SaveFileErr(c.SaveUploadedFile(vimgFile, imgFilePath)); re != nil {
 			model.DB.Delete(&video)
-			return serializer.Response{
-				Code:  500006,
-				Msg:   "读取文件错误",
-				Error: err.Error(),
-			}
+			return re.(serializer.Response)
 		}
 		video.Cover = path.Join("cover", id, newVimgName)
 	}
 
 	//更新投稿状态
 	video.State = true
-	funcs.SQLErr(c, model.DB.Save(&video).Error)
+	if re := funcs.SQLErr(model.DB.Save(&video).Error); re != nil {
+		return re.(serializer.Response)
+	}
 
 	return serializer.Response{
 		Code: 200,

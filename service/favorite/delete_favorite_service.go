@@ -3,42 +3,37 @@ package favorite
 import (
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 
 	"github.com/gin-gonic/gin"
 )
 
-// DeleteFavoriteService 分区删除服务
+// 删除服务
 type DeleteFavoriteService struct{}
 
-// 分区删除
+// 收藏夹删除
 func (service *DeleteFavoriteService) Delete(c *gin.Context) serializer.Response {
 	//获取当前用户
-	user := model.User{}
-	if d, _ := c.Get("user"); d != nil {
-		if u, ok := d.(*model.User); ok {
-			user = *u
-		}
-	}
+	user := funcs.GetUser(c)
+
 	fid := c.Param("fid")
-	favorites := model.Favorites{}
-	if err := model.DB.Where("collector = ? and id = ?", user.ID, fid).First(&favorites).Error; err != nil {
+	favorite := model.Favorites{}
+	db := model.DB.Where("collector = ? and id = ?", user.ID, fid)
+	if re := funcs.SQLErr(db.First(&favorite).Error); re != nil {
 		return serializer.Response{
-			Code:  404,
-			Msg:   "收藏夹不存在",
-			Error: err.Error(),
+			Code: 200,
+			Data: false,
+			Msg:  "收藏夹不存在",
 		}
 	}
 
-	if err := model.DB.Delete(&favorites).Error; err != nil {
-		return serializer.Response{
-			Code:  60003,
-			Msg:   "收藏夹删除失败",
-			Error: err.Error(),
-		}
+	if re := funcs.SQLErr(model.DB.Unscoped().Delete(&favorite).Error); re != nil {
+		return re.(serializer.Response)
 	}
 
 	return serializer.Response{
 		Code: 200,
+		Data: true,
 		Msg:  "成功",
 	}
 }

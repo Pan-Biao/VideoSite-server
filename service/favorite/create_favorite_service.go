@@ -3,6 +3,7 @@ package favorite
 import (
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,15 +15,12 @@ type CreateFavoriteService struct {
 // CreateFavoriteService 创建收藏夹的服务
 func (service *CreateFavoriteService) Create(c *gin.Context) serializer.Response {
 	//获取当前用户
-	user := model.User{}
-	if d, _ := c.Get("user"); d != nil {
-		if u, ok := d.(*model.User); ok {
-			user = *u
-		}
-	}
+	user := funcs.GetUser(c)
+
 	if CheckingFavorite(user, service.Name) {
 		return serializer.Response{
 			Code: 404,
+			Data: false,
 			Msg:  "名称重复",
 		}
 	}
@@ -32,12 +30,8 @@ func (service *CreateFavoriteService) Create(c *gin.Context) serializer.Response
 		Name:      service.Name,
 	}
 
-	if err := model.DB.Create(&favorites).Error; err != nil {
-		return serializer.Response{
-			Code:  50001,
-			Msg:   "收藏夹创建失败",
-			Error: err.Error(),
-		}
+	if re := funcs.SQLErr(model.DB.Create(&favorites).Error); re != nil {
+		return re.(serializer.Response)
 	}
 
 	return serializer.Response{

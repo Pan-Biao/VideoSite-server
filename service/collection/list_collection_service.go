@@ -1,38 +1,34 @@
 package collection
 
 import (
+	"strconv"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 
 	"github.com/gin-gonic/gin"
 )
 
 // ListCollectionService 分区列表
-type ListCollectionService struct {
-	FID uint `form:"fid" json:"fid" `
-}
+type ListCollectionService struct{}
 
 // List 分区列表服务
 func (service *ListCollectionService) List(c *gin.Context) serializer.Response {
 	//获取当前用户
-	user := model.User{}
-	db := model.DB
-	if d, _ := c.Get("user"); d != nil {
-		if u, ok := d.(*model.User); ok {
-			user = *u
-		}
-	}
+	user := funcs.GetUser(c)
+
+	fid := c.Param("fid")
 
 	collection := []model.Collection{}
-	if service.FID != 0 {
-		db.Where("favorite = ?", service.FID)
+
+	db := model.DB
+	id, _ := strconv.Atoi(fid)
+	if id != 0 {
+		db = db.Where("favorite = ?", id)
 	}
-	if err := db.Where("collector = ?", user.ID).Find(&collection).Error; err != nil {
-		return serializer.Response{
-			Code:  50000,
-			Msg:   "收藏查询错误",
-			Error: err.Error(),
-		}
+	db = db.Where("collector = ?", user.ID)
+	if re := funcs.SQLErr(db.Find(&collection).Error); re != nil {
+		return re.(serializer.Response)
 	}
 
 	return serializer.Response{

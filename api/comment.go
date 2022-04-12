@@ -28,6 +28,27 @@ func ListComment(c *gin.Context) {
 	}
 }
 
+//点赞评论
+func LikeComment(c *gin.Context) {
+	serice := comment.LikeCommentService{}
+	res := serice.Like(c)
+	c.JSON(200, res)
+}
+
+//是否点赞了评论
+func IsLikeComment(c *gin.Context) {
+	serice := comment.IsLikeCommentService{}
+	res := serice.List(c)
+	c.JSON(200, res)
+}
+
+//不点赞评论
+func UnLikeComment(c *gin.Context) {
+	serice := comment.UnLikeCommentService{}
+	res := serice.UnLike(c)
+	c.JSON(200, res)
+}
+
 // 删除评论
 func DeleteComment(c *gin.Context) {
 	service := comment.DeleteCommentService{}

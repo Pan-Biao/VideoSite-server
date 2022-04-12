@@ -17,6 +17,13 @@ func CreateCollection(c *gin.Context) {
 	}
 }
 
+//是否收藏
+func IsCollection(c *gin.Context) {
+	service := collection.IsCollectionService{}
+	res := service.Is(c)
+	c.JSON(200, res)
+}
+
 // ListCollection 收藏列表接口
 func ListCollection(c *gin.Context) {
 	service := collection.ListCollectionService{}

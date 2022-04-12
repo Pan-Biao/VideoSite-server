@@ -3,6 +3,7 @@ package favorite
 import (
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,16 +13,12 @@ type ListFavoriteService struct{}
 
 // List 收藏夹列表服务
 func (service *ListFavoriteService) List(c *gin.Context) serializer.Response {
-	favorites := []model.Favorites{}
-	uid := c.Param("uid")
-	err := model.DB.Where("collector = ?", uid).Find(&favorites).Error
+	user := funcs.GetUser(c)
 
-	if err != nil {
-		return serializer.Response{
-			Code:  50000,
-			Msg:   "视频查询错误",
-			Error: err.Error(),
-		}
+	favorites := []model.Favorites{}
+	db := model.DB.Where("collector = ?", user.ID)
+	if re := funcs.SQLErr(db.Find(&favorites).Error); re != nil {
+		return re.(serializer.Response)
 	}
 
 	return serializer.Response{

@@ -3,6 +3,7 @@ package follow
 import (
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,31 +15,21 @@ func (service *DeleteFollowService) Delete(c *gin.Context) serializer.Response {
 	follow := model.Follow{}
 	fid := c.Param("fid")
 	//获取当前用户
-	user := model.User{}
-	if d, _ := c.Get("user"); d != nil {
-		if u, ok := d.(*model.User); ok {
-			user = *u
-		}
+	user := funcs.GetUser(c)
+	db := model.DB
+	db = db.Where("follower = ? and fans = ?", fid, user.ID)
+
+	if re := funcs.SQLErr(db.First(&follow).Error); re != nil {
+		return re.(serializer.Response)
 	}
 
-	if err := model.DB.Where("follower = ? and fans = ?", fid, user.ID).First(&follow).Error; err != nil {
-		return serializer.Response{
-			Code:  404,
-			Msg:   "关注不存在",
-			Error: err.Error(),
-		}
-	}
-
-	if err := model.DB.Delete(&follow).Error; err != nil {
-		return serializer.Response{
-			Code:  60003,
-			Msg:   "取消关注失败",
-			Error: err.Error(),
-		}
+	if re := funcs.SQLErr(model.DB.Unscoped().Delete(&follow).Error); re != nil {
+		return re.(serializer.Response)
 	}
 
 	return serializer.Response{
 		Code: 200,
+		Data: true,
 		Msg:  "成功",
 	}
 }

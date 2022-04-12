@@ -2,21 +2,43 @@ package serializer
 
 import "vodeoWeb/model"
 
-// Follows 关注序列化器
+// 关注序列化器
 type Follow struct {
 	ID        uint  `json:"id"`
-	FID       uint  `json:"fid"`
 	CreatedAt int64 `json:"created_at"`
+	User      User  `json:"user"`
 }
 
-func BuildFollows(Follows []model.Follow) []Follow {
+func BuildFollow(item model.Follow, mode string) Follow {
+	user := model.User{}
+	if mode == "fans" {
+		model.DB.First(&user, item.Fans)
+	}
+	if mode == "follower" {
+		model.DB.First(&user, item.Follower)
+	}
+	follow := Follow{
+		ID:        item.ID,
+		CreatedAt: item.CreatedAt.Unix(),
+		User:      BuildUser(user),
+	}
+	return follow
+}
+
+func BuildFans(Follows []model.Follow) []Follow {
 	fs := []Follow{}
 	for _, item := range Follows {
-		fs = append(fs, Follow{
-			ID:        item.ID,
-			FID:       item.Follower,
-			CreatedAt: item.CreatedAt.Unix(),
-		})
+		fans := BuildFollow(item, "fans")
+		fs = append(fs, fans)
+	}
+	return fs
+}
+
+func BuildFollowers(Follows []model.Follow) []Follow {
+	fs := []Follow{}
+	for _, item := range Follows {
+		follower := BuildFollow(item, "follower")
+		fs = append(fs, follower)
 	}
 	return fs
 }

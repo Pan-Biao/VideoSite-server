@@ -16,7 +16,7 @@ import (
 // UpdateVideoService 视频更新服务
 type UpdateVideoService struct {
 	Title *string `form:"title" json:"title" binding:"min=1,max=30"`
-	Info  *string `form:"info" json:"info" binding:"min=0,max=300"`
+	Info  *string `form:"info" json:"info" binding:"min=0,max=290"`
 	Said  uint    `form:"said" json:"said" `
 }
 

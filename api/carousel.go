@@ -145,7 +145,7 @@ func DeleteCarousel(c *gin.Context) {
 		errStr = "文件删除失败,"
 	}
 
-	if err := model.DB.Delete(&carousel).Error; err != nil {
+	if err := model.DB.Unscoped().Delete(&carousel).Error; err != nil {
 		c.JSON(200, serializer.Response{
 			Code: 500,
 			Msg:  errStr + "数据库删除失败",

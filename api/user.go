@@ -107,7 +107,7 @@ func UserUnseal(c *gin.Context) {
 // UserLogout 用户登出
 func UserLogout(c *gin.Context) {
 	// 移动端登出
-	token := c.GetHeader("X-Token")
+	token := c.GetHeader("Authorization")
 	if token != "" {
 		_ = cache.DelUserToken(token)
 	} else {

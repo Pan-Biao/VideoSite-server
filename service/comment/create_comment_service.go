@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,12 +16,7 @@ type CreateCommentService struct {
 // CreateCommentService 创建收藏夹的服务
 func (service *CreateCommentService) Create(c *gin.Context) serializer.Response {
 	//获取当前用户
-	user := model.User{}
-	if d, _ := c.Get("user"); d != nil {
-		if u, ok := d.(*model.User); ok {
-			user = *u
-		}
-	}
+	user := funcs.GetUser(c)
 
 	vid := c.Param("vid")
 	tempid, _ := strconv.Atoi(vid)
@@ -30,12 +26,8 @@ func (service *CreateCommentService) Create(c *gin.Context) serializer.Response 
 		Vid:         uint(tempid),
 	}
 
-	if err := model.DB.Create(&comment).Error; err != nil {
-		return serializer.Response{
-			Code:  50001,
-			Msg:   "评论失败",
-			Error: err.Error(),
-		}
+	if re := funcs.SQLErr(model.DB.Create(&comment).Error); re != nil {
+		return re.(serializer.Response)
 	}
 
 	return serializer.Response{

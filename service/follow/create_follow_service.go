@@ -3,6 +3,7 @@ package follow
 import (
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,37 +13,37 @@ type CreateFollowService struct{}
 // CreateFollowService 关注的服务
 func (service *CreateFollowService) Create(c *gin.Context) serializer.Response {
 	//获取当前用户
-	user := model.User{}
-	if d, _ := c.Get("user"); d != nil {
-		if u, ok := d.(*model.User); ok {
-			user = *u
-		}
-	}
+	user := funcs.GetUser(c)
+
 	fid := c.Param("fid")
+
 	follower := model.User{}
-	if err := model.DB.First(&follower, fid).Error; err != nil {
-		return serializer.Response{
-			Code:  404,
-			Msg:   "无法查找到需要关注的用户",
-			Error: err.Error(),
-		}
+	if re := funcs.SQLErr(model.DB.First(&follower, fid).Error); re != nil {
+		return re.(serializer.Response)
 	}
 
 	follow := model.Follow{
 		Follower: follower.ID,
 		Fans:     user.ID,
 	}
+	temp := model.Follow{}
 
-	if err := model.DB.Create(&follow).Error; err != nil {
+	model.DB.Where("follower = ?", follow.Follower).Where("fans = ?", follow.Fans).First(&temp)
+
+	if temp.Fans == follow.Fans {
 		return serializer.Response{
-			Code:  50001,
-			Msg:   "关注失败",
-			Error: err.Error(),
+			Code: 50001,
+			Msg:  "已关注",
 		}
+	}
+
+	if re := funcs.SQLErr(model.DB.Create(&follow).Error); re != nil {
+		return re.(serializer.Response)
 	}
 
 	return serializer.Response{
 		Code: 200,
+		Data: true,
 		Msg:  "关注成功",
 	}
 }

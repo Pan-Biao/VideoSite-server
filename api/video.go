@@ -64,13 +64,22 @@ func PlayNumber(c *gin.Context) {
 //点赞
 func LikeVideo(c *gin.Context) {
 	serice := video.LikeVideoService{}
-	serice.Like(c)
+	res := serice.Like(c)
+	c.JSON(200, res)
+}
+
+//是否点赞了
+func IsLikeVideo(c *gin.Context) {
+	serice := video.IsLikeVideoService{}
+	res := serice.Is(c)
+	c.JSON(200, res)
 }
 
 //不点赞
 func UnLikeVideo(c *gin.Context) {
 	serice := video.UnLikeVideoService{}
-	serice.UnLike(c)
+	res := serice.UnLike(c)
+	c.JSON(200, res)
 }
 
 //视频封禁

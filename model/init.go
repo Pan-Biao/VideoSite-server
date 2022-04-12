@@ -46,6 +46,8 @@ func Database(connString string) {
 	sqlDB.SetMaxIdleConns(10)
 	//打开
 	sqlDB.SetMaxOpenConns(20)
+	//设置超时
+	sqlDB.SetConnMaxLifetime(59 * time.Second)
 	DB = db
 
 	migration()
