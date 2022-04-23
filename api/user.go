@@ -117,7 +117,8 @@ func UserLogout(c *gin.Context) {
 		s.Save()
 	}
 	c.JSON(200, serializer.Response{
-		Code: 0,
+		Code: 200,
 		Msg:  "登出成功",
+		Data: true,
 	})
 }

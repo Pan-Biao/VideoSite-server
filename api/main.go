@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"vodeoWeb/cache"
 	"vodeoWeb/conf"
 	"vodeoWeb/model"
@@ -35,14 +34,14 @@ func Ping(c *gin.Context) {
 func CurrentUser(c *gin.Context) *model.User {
 	token := c.GetHeader("Authorization")
 	if token != "" {
-		log.Panicln("使用token获取当前用户")
+		fmt.Println("使用token获取当前用户", token)
 		if id, _ := cache.GetUserByToken(token); id != "" {
 			user := model.User{}
 			model.DB.First(&user, id)
 			return &user
 		}
 	} else {
-		log.Panicln("未使用token")
+		fmt.Println("未使用token")
 		if user, _ := c.Get("user"); user != nil {
 			if u, ok := user.(*model.User); ok {
 				return u
