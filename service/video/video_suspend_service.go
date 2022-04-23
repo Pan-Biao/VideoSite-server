@@ -15,30 +15,20 @@ type VideoSuspendService struct{}
 func (service *VideoSuspendService) Suspend(c *gin.Context) serializer.Response {
 	//检测root
 	if !funcs.CheckRoot(c) {
-		return serializer.Response{
-			Code: 500,
-			Msg:  "无权限",
-		}
+		return serializer.CheckNoRight()
 	}
 	vid := c.Param("vid")
 	//获取封禁视频
-	video := model.Video{}
-	if err := model.DB.First(&video, vid).Error; err != nil {
-		return serializer.Response{
-			Code: 404,
-			Msg:  "查询出错",
-		}
+	video := funcs.GetVideo(vid)
+	if video == (model.Video{}) {
+		return serializer.DBErr("", nil)
 	}
+
 	//更新数据库数据
 	video.State = false
 	if err := model.DB.Save(&video).Error; err != nil {
-		return serializer.Response{
-			Code: 404,
-			Msg:  "保存信息错误",
-		}
+		return serializer.DBErr("", err)
 	}
-	return serializer.Response{
-		Code: 200,
-		Msg:  "封禁成功",
-	}
+
+	return serializer.ReturnData("封禁成功", true)
 }

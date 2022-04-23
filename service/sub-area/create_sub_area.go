@@ -1,55 +1,42 @@
 package subArea
 
 import (
+	"unicode/utf8"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 
 	"github.com/gin-gonic/gin"
 )
 
 // CreateSubAreaService 创建区域的服务
 type CreateSubAreaService struct {
-	Name string `form:"name" json:"name" binding:"required,min=2,max=6"`
+	Name string `form:"name" json:"name"`
 }
 
-// 视频投稿的服务
 func (service *CreateSubAreaService) Create(c *gin.Context) serializer.Response {
-	//获取当前用户
-	user := model.User{}
-	if d, _ := c.Get("user"); d != nil {
-		if u, ok := d.(*model.User); ok {
-			user = *u
-		}
+	if utf8.RuneCountInString(service.Name) < 2 || utf8.RuneCountInString(service.Name) > 6 {
+		return serializer.ParamErr("名称长度应为2-6")
 	}
-	if !user.Root {
-		return serializer.Response{
-			Code: 9999,
-			Msg:  "没有权限",
-		}
+
+	//检测权限
+	if !funcs.CheckRoot(c) {
+		return serializer.CheckNoRight()
 	}
+
 	subArea := model.SubArea{
 		Name: service.Name,
 	}
+
 	if CheckingSubArea(service.Name) {
-		return serializer.Response{
-			Code: 404,
-			Msg:  "名称重复",
-		}
-	}
-	err := model.DB.Create(&subArea).Error
-	if err != nil {
-		return serializer.Response{
-			Code:  50001,
-			Msg:   "分区创建失败",
-			Error: err.Error(),
-		}
+		return serializer.ParamErr("名称重复")
 	}
 
-	return serializer.Response{
-		Code: 200,
-		Data: serializer.BuildSubArea(subArea),
-		Msg:  "成功",
+	if err := model.DB.Create(&subArea).Error; err != nil {
+		return serializer.DBErr("", err)
 	}
+
+	return serializer.ReturnData("成功", serializer.BuildSubArea(subArea))
 }
 
 func CheckingSubArea(name string) bool {

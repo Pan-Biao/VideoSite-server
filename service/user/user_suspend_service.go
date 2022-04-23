@@ -15,30 +15,19 @@ type UserSuspendService struct{}
 func (service *UserSuspendService) Suspend(c *gin.Context) serializer.Response {
 	//检测root
 	if !funcs.CheckRoot(c) {
-		return serializer.Response{
-			Code: 500,
-			Msg:  "无权限",
-		}
+		return serializer.CheckNoRight()
 	}
 	uid := c.Param("uid")
 	//获取封禁用户
 	user2 := model.User{}
 	if err := model.DB.First(&user2, uid).Error; err != nil {
-		return serializer.Response{
-			Code: 404,
-			Msg:  "查询出错",
-		}
+		return serializer.DBErr("", err)
 	}
 	//更新数据库数据
 	user2.Status = model.Suspend
 	if err := model.DB.Save(&user2).Error; err != nil {
-		return serializer.Response{
-			Code: 404,
-			Msg:  "保存信息错误",
-		}
+		return serializer.DBErr("", err)
 	}
-	return serializer.Response{
-		Code: 200,
-		Msg:  "封禁成功",
-	}
+
+	return serializer.ReturnData("封禁成功", true)
 }

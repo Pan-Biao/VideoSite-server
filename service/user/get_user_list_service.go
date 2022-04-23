@@ -12,7 +12,7 @@ import (
 // Sorts 排序条件列表
 type Sorts struct {
 	Sort  string `form:"sort" json:"sort"`
-	Field string `form:"field" json:"field" binding:"required"`
+	Field string `form:"field" json:"field"`
 }
 
 // 获取用户列表服务
@@ -27,7 +27,7 @@ type GetUserListService struct {
 func (service *GetUserListService) List(c *gin.Context) serializer.Response {
 	users := []model.User{}
 	db := model.DB
-	// db.Model(model.User{})
+
 	//总长度
 	var total int64
 	//每页的长度 不传入默认20 传入0为不限制长度,此时不需要传入当前页PageNumber
@@ -42,9 +42,10 @@ func (service *GetUserListService) List(c *gin.Context) serializer.Response {
 	}
 	//添加多个排序条件
 	if service.Sorts != nil {
-		log.Println("Sorts:", service.Sorts)
 		for _, v := range service.Sorts {
-			if v.Field != "" {
+			if v.Field == "" {
+				return serializer.ParamErr("排序条件错误")
+			} else {
 				//拼接字符串
 				strs := []string{v.Field, " ", v.Sort}
 				db.Order(util.Join(strs))
@@ -72,25 +73,13 @@ func (service *GetUserListService) List(c *gin.Context) serializer.Response {
 	}
 	//查询
 	if err := db.Find(&users).Error; err != nil {
-		return serializer.Response{
-			Code:  50000,
-			Msg:   "用户查询错误",
-			Error: err.Error(),
-		}
+		return serializer.DBErr("", err)
 	}
 	//查询长度
 	db.Limit(-1).Offset(-1)
 	if err := db.Count(&total).Error; err != nil {
-		return serializer.Response{
-			Code:  50000,
-			Msg:   "用户查询错误",
-			Error: err.Error(),
-		}
+		return serializer.DBErr("", err)
 	}
 	//反回数据
-	return serializer.Response{
-		Code: 200,
-		Data: serializer.BuildUsers(users, pageNumber, number, int(total)),
-		Msg:  "成功",
-	}
+	return serializer.ReturnData("成功", serializer.BuildUsers(users, pageNumber, number, int(total)))
 }

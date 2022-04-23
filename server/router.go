@@ -2,7 +2,6 @@ package server
 
 import (
 	"net/http"
-	"os"
 	"vodeoWeb/api"
 	"vodeoWeb/middleware"
 
@@ -14,7 +13,7 @@ func NewRouter() *gin.Engine {
 	r := gin.Default()
 
 	// 中间件, 顺序不能改
-	r.Use(middleware.Session(os.Getenv("SESSION_SECRET")))
+	r.Use(middleware.Session("BurstMagic"))
 	r.Use(middleware.Cors())
 	r.Use(middleware.CurrentUser())
 
@@ -103,9 +102,6 @@ func NewRouter() *gin.Engine {
 
 	// root路由
 	root := r.Group("/api/root")
-	// 中间件, 顺序不能改
-	root.Use(middleware.Session(os.Getenv("SESSION_SECRET"))) //Session保持登录状态
-	root.Use(middleware.CurrentUser())                        //用户登录状态
 	// 需要登录保护
 	root.Use(middleware.AuthRequired())
 	//分区接口
@@ -127,6 +123,7 @@ func NewRouter() *gin.Engine {
 	}
 	//视频
 	{
+		root.POST("video/list", api.ListRootVideo)        //获取视频列表
 		root.POST("video/suspend/:vid", api.VideoSuspend) //禁用
 		root.POST("video/unseal/:vid", api.VideoUnseal)   //解封
 	}

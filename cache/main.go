@@ -1,9 +1,9 @@
 package cache
 
 import (
-	"os"
-	"vodeoWeb/util"
 	"strconv"
+	"vodeoWeb/util"
+
 	"github.com/go-redis/redis"
 )
 
@@ -12,10 +12,10 @@ var RedisClient *redis.Client
 
 // Redis 在中间件中初始化redis链接
 func Redis() {
-	db, _ := strconv.ParseUint(os.Getenv("REDIS_DB"), 10, 64)
+	db, _ := strconv.ParseUint("", 10, 64)
 	client := redis.NewClient(&redis.Options{
-		Addr:       os.Getenv("REDIS_ADDR"),
-		Password:   os.Getenv("REDIS_PW"),
+		Addr:       "127.0.0.1:6379",
+		Password:   "",
 		DB:         int(db),
 		MaxRetries: 1,
 	})

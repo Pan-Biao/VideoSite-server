@@ -15,25 +15,22 @@ type DeleteCommentService struct{}
 func (service *DeleteCommentService) Delete(c *gin.Context) serializer.Response {
 	//获取当前用户
 	user := funcs.GetUser(c)
+	if user == (model.User{}) {
+		return serializer.DBErr("", nil)
+	}
 
 	cid := c.Param("cid")
 	comment := model.Comment{}
 	db := model.DB.Where("commentator = ? and id = ?", user.ID, cid)
-	if re := funcs.SQLErr(db.First(&comment).Error); re != nil {
-		return serializer.Response{
-			Code: 404,
-			Data: false,
-			Msg:  "评论不存在",
-		}
+	count := int64(0)
+	db.First(&comment).Count(&count)
+	if count == 0 {
+		return serializer.ReturnData("评论不存在", true)
 	}
 
-	if re := funcs.SQLErr(model.DB.Unscoped().Delete(&comment).Error); re != nil {
-		return re.(serializer.Response)
+	if err := model.DB.Unscoped().Delete(&comment).Error; err != nil {
+		return serializer.DBErr("", err)
 	}
 
-	return serializer.Response{
-		Code: 200,
-		Data: true,
-		Msg:  "成功",
-	}
+	return serializer.ReturnData("删除成功", true)
 }

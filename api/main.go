@@ -3,6 +3,8 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"vodeoWeb/cache"
 	"vodeoWeb/conf"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
@@ -20,10 +22,31 @@ func Ping(c *gin.Context) {
 }
 
 // CurrentUser 获取当前用户
+// func CurrentUser(c *gin.Context) *model.User {
+// 	if user, _ := c.Get("user"); user != nil {
+// 		if u, ok := user.(*model.User); ok {
+// 			return u
+// 		}
+// 	}
+// 	return nil
+// }
+
+// CurrentUser 获取当前用户
 func CurrentUser(c *gin.Context) *model.User {
-	if user, _ := c.Get("user"); user != nil {
-		if u, ok := user.(*model.User); ok {
-			return u
+	token := c.GetHeader("Authorization")
+	if token != "" {
+		log.Panicln("使用token获取当前用户")
+		if id, _ := cache.GetUserByToken(token); id != "" {
+			user := model.User{}
+			model.DB.First(&user, id)
+			return &user
+		}
+	} else {
+		log.Panicln("未使用token")
+		if user, _ := c.Get("user"); user != nil {
+			if u, ok := user.(*model.User); ok {
+				return u
+			}
 		}
 	}
 	return nil
@@ -37,13 +60,12 @@ func ErrorResponse(err error) serializer.Response {
 			tag := conf.T(fmt.Sprintf("Tag.Valid.%s", e.Tag))
 			return serializer.ParamErr(
 				fmt.Sprintf("%s%s", field, tag),
-				err,
 			)
 		}
 	}
 	if _, ok := err.(*json.UnmarshalTypeError); ok {
-		return serializer.ParamErr("JSON类型不匹配", err)
+		return serializer.ParamErr("JSON类型不匹配")
 	}
 
-	return serializer.ParamErr("参数错误", err)
+	return serializer.ParamErr("参数错误")
 }

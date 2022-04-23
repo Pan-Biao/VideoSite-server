@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"unicode/utf8"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
 	"vodeoWeb/service/funcs"
@@ -15,9 +16,9 @@ import (
 
 // CreateVideoService 视频投稿的服务
 type CreateVideoService struct {
-	Title string `form:"title" json:"title" binding:"required,min=1,max=30"`
-	Info  string `form:"info" json:"info" binding:"min=0,max=300"`
-	Said  uint   `form:"said" json:"said" binding:"required"`
+	Title string `form:"title" json:"title" `
+	Info  string `form:"info" json:"info" `
+	Said  uint   `form:"said" json:"said" `
 }
 
 const DefaultVideoPath = "G:/videoResources/video"
@@ -25,13 +26,25 @@ const DefaultImgPath = "G:/videoResources/cover"
 
 // 视频投稿的服务
 func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
+	if utf8.RuneCountInString(service.Title) < 1 || utf8.RuneCountInString(service.Title) > 40 {
+		return serializer.ParamErr("标题长度应为1-40个字")
+	}
+	if utf8.RuneCountInString(service.Info) > 300 {
+		return serializer.ParamErr("视频简介长度应为300个字以下")
+	}
+	if service.Said == 0 {
+		return serializer.ParamErr("请选择分区")
+	}
+	count := int64(0)
+	model.DB.Model(&model.SubArea{}).First(&model.SubArea{}, service.Said).Count(&count)
+	if count == 0 {
+		return serializer.ParamErr("分区不存在")
+	}
 
 	//获取当前用户
-	user := model.User{}
-	if d, _ := c.Get("user"); d != nil {
-		if u, ok := d.(*model.User); ok {
-			user = *u
-		}
+	user := funcs.GetUser(c)
+	if user == (model.User{}) {
+		return serializer.DBErr("", nil)
 	}
 
 	video := model.Video{
@@ -44,8 +57,8 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 		Said:       service.Said,
 	}
 
-	if re := funcs.SQLErr(model.DB.Create(&video).Error); re != nil {
-		return re.(serializer.Response)
+	if err := model.DB.Create(&video).Error; err != nil {
+		return serializer.DBErr("", err)
 	}
 
 	id := strconv.FormatUint(uint64(user.ID), 10)
@@ -54,9 +67,9 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 	{
 		videoFile, head, err := c.Request.FormFile("video")
 
-		if re := funcs.FileErr(err); re != nil {
-			model.DB.Delete(&video)
-			return re.(serializer.Response)
+		if err != nil {
+			model.DB.Unscoped().Delete(&video)
+			return serializer.ParamErr("请上传视频文件")
 		}
 
 		//读取
@@ -70,6 +83,7 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 
 		//保存video文件
 		if re := funcs.SaveFile(&videoFile, videoFilePath); re != nil {
+			model.DB.Unscoped().Delete(&video)
 			return re.(serializer.Response)
 		}
 
@@ -80,9 +94,9 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 	{
 		vimgFile, err := c.FormFile("vimg")
 
-		if re := funcs.FileErr(err); re != nil {
-			model.DB.Delete(&video)
-			return re.(serializer.Response)
+		if err != nil {
+			model.DB.Unscoped().Delete(&video)
+			return serializer.ParamErr("请上传视频封面文件")
 		}
 
 		log.Println(vimgFile.Filename)
@@ -96,22 +110,18 @@ func (service *CreateVideoService) Create(c *gin.Context) serializer.Response {
 		imgFilePath := path.Join(DefaultImgPath, id, newVimgName)
 		log.Println(imgFilePath)
 		//保存img文件
-		if re := funcs.SaveFileErr(c.SaveUploadedFile(vimgFile, imgFilePath)); re != nil {
-			model.DB.Delete(&video)
-			return re.(serializer.Response)
+		if err := c.SaveUploadedFile(vimgFile, imgFilePath); err != nil {
+			model.DB.Unscoped().Delete(&video)
+			return serializer.FileErr("", err)
 		}
 		video.Cover = path.Join("cover", id, newVimgName)
 	}
 
 	//更新投稿状态
 	video.State = true
-	if re := funcs.SQLErr(model.DB.Save(&video).Error); re != nil {
-		return re.(serializer.Response)
+	if err := model.DB.Save(&video).Error; err != nil {
+		return serializer.DBErr("", err)
 	}
 
-	return serializer.Response{
-		Code: 200,
-		Data: serializer.BuildVideo(video),
-		Msg:  "成功",
-	}
+	return serializer.ReturnData("创建视频成功", serializer.BuildVideo(video))
 }

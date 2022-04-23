@@ -18,19 +18,21 @@ type TrackedErrorResponse struct {
 
 // 三位数错误编码为复用http原本含义
 // 五位数错误编码为应用自定义错误
-// 五开头的五位数错误编码为服务器端错误，比如数据库操作失败
-// 四开头的五位数错误编码为客户端错误，有时候是客户端代码写错了，有时候是用户操作错误
+// 9开头的五位数错误编码为服务器端错误，比如数据库操作失败
+// 8开头的五位数错误编码为客户端错误，有时候是客户端代码写错了，有时候是用户操作错误
 const (
 	// CodeCheckLogin 未登录
 	CodeCheckLogin = 401
 	// CodeNoRightErr 未授权访问
 	CodeNoRightErr = 403
 	// CodeDBError 数据库操作失败
-	CodeDBError = 50001
-	// CodeEncryptError 加密失败
-	CodeEncryptError = 50002
+	CodeDBError = 99999
+	// CodeFileError 文件操作失败
+	CodeFileError = 88888
 	//CodeParamErr 各种奇奇怪怪的参数错误
-	CodeParamErr = 40001
+	CodeParamErr = 77777
+	//CodeSetErr 各种奇奇怪怪的错误
+	CodeSetErr = 66666
 )
 
 // CheckLogin 检查登录
@@ -38,6 +40,14 @@ func CheckLogin() Response {
 	return Response{
 		Code: CodeCheckLogin,
 		Msg:  "未登录",
+	}
+}
+
+// CheckNoRight 检查权限
+func CheckNoRight() Response {
+	return Response{
+		Code: CodeNoRightErr,
+		Msg:  "无访问权限",
 	}
 }
 
@@ -62,10 +72,35 @@ func DBErr(msg string, err error) Response {
 	return Err(CodeDBError, msg, err)
 }
 
+// FileErr 文件操作失败
+func FileErr(msg string, err error) Response {
+	if msg == "" {
+		msg = "文件操作失败"
+	}
+	return Err(CodeFileError, msg, err)
+}
+
 // ParamErr 各种参数错误
-func ParamErr(msg string, err error) Response {
+func ParamErr(msg string) Response {
 	if msg == "" {
 		msg = "参数错误"
 	}
-	return Err(CodeParamErr, msg, err)
+	return Err(CodeParamErr, msg, nil)
+}
+
+// SetErr 自定义错误
+func SetErr(msg string, err error) Response {
+	if msg == "" {
+		msg = "发生错误"
+	}
+	return Err(CodeSetErr, msg, err)
+}
+
+//正确返回
+func ReturnData(str string, data interface{}) Response {
+	return Response{
+		Code: 200,
+		Msg:  str,
+		Data: data,
+	}
 }

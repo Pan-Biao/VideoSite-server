@@ -1,10 +1,8 @@
 package video
 
 import (
-	"log"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
-	"vodeoWeb/service/funcs"
 	"vodeoWeb/util"
 
 	"github.com/gin-gonic/gin"
@@ -13,7 +11,7 @@ import (
 // Sorts 排序条件列表
 type Sorts struct {
 	Sort  string `form:"sort" json:"sort"`
-	Field string `form:"field" json:"field" binding:"required"`
+	Field string `form:"field" json:"field"`
 }
 
 // ListSearchVideoService 视频列表
@@ -38,15 +36,15 @@ func (service *ListSearchVideoService) List(c *gin.Context) serializer.Response 
 		number = 20
 		db = db.Limit(number)
 	} else {
-		log.Println("Number:", *service.Number)
 		number = *service.Number
 		db = db.Limit(number)
 	}
 	//添加多个排序条件
 	if service.Sorts != nil {
-		log.Println("Sorts:", service.Sorts)
 		for _, v := range service.Sorts {
-			if v.Field != "" {
+			if v.Field == "" {
+				return serializer.ParamErr("排序条件错误")
+			} else {
 				//拼接字符串
 				strs := []string{v.Field, " ", v.Sort}
 				db = db.Order(util.Join(strs))
@@ -54,12 +52,9 @@ func (service *ListSearchVideoService) List(c *gin.Context) serializer.Response 
 		}
 	}
 	//判断视频状态
-	if !funcs.CheckRoot(c) {
-		db = db.Where("state = ?", true)
-	}
+	db = db.Where("state = ?", true)
 	//是否分区查找
 	if service.SAID != 0 {
-		log.Println("SAID:", service.SAID)
 		db = db.Where("said = ?", service.SAID)
 	}
 	//UID查找
@@ -68,13 +63,14 @@ func (service *ListSearchVideoService) List(c *gin.Context) serializer.Response 
 	}
 	//关键字查找
 	if service.Searchs != nil {
-		log.Println("Searchs:", service.Searchs)
 		//循环添加需要查询的关键字
+		//使用OR前需要加个Where，所以加一个
+		db = db.Where("title = ?", "#$#$")
 		for _, v := range service.Searchs {
 			if v != "" {
 				str := util.JoinLike(v)
 				//先查找标题
-				db = db.Where("title like ?", str)
+				db = db.Or("title like ?", str)
 				//然后查找昵称
 				users := []model.User{}
 				model.DB.Where("nickname like ?", str).Find(&users)
@@ -88,31 +84,18 @@ func (service *ListSearchVideoService) List(c *gin.Context) serializer.Response 
 	//db.Offset() 必须放在find()前面，不然查询语句可能不对
 	pageNumber := 1
 	if service.PageNumber > 1 && number > 0 {
-		log.Println("Offset:", number)
 		pageNumber = service.PageNumber
 		db = db.Offset((pageNumber - 1) * number)
 	}
 	//查询
 	if err := db.Find(&videos).Error; err != nil {
-		return serializer.Response{
-			Code:  50000,
-			Msg:   "视频查询错误",
-			Error: err.Error(),
-		}
+		return serializer.DBErr("", err)
 	}
 	//查询长度
 	db = db.Limit(-1).Offset(-1)
 	if err := db.Count(&total).Error; err != nil {
-		return serializer.Response{
-			Code:  50000,
-			Msg:   "视频查询错误",
-			Error: err.Error(),
-		}
+		return serializer.DBErr("", err)
 	}
 	//反回数据
-	return serializer.Response{
-		Code: 200,
-		Data: serializer.BuildVideos(videos, pageNumber, number, int(total)),
-		Msg:  "成功",
-	}
+	return serializer.ReturnData("成功", serializer.BuildVideos(videos, pageNumber, number, int(total)))
 }

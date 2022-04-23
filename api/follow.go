@@ -13,7 +13,7 @@ func CreateFollow(c *gin.Context) {
 		res := service.Create(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -24,7 +24,7 @@ func IsFollow(c *gin.Context) {
 		res := service.Is(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -35,7 +35,7 @@ func ListFollower(c *gin.Context) {
 		res := service.List(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -46,7 +46,7 @@ func ListFans(c *gin.Context) {
 		res := service.List(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 

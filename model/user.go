@@ -34,10 +34,10 @@ const (
 )
 
 // GetUser 用ID获取用户
-func GetUser(ID interface{}) (User, error) {
+func GetUser(ID string) (User, error) {
 	var user User
-	result := DB.First(&user, ID)
-	return user, result.Error
+	result := DB.First(&user, ID).Error
+	return user, result
 }
 
 // SetPassword 设置密码

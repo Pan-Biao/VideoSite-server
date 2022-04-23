@@ -1,4 +1,4 @@
-package favorite
+package favorites
 
 import (
 	"vodeoWeb/model"
@@ -15,25 +15,22 @@ type DeleteFavoriteService struct{}
 func (service *DeleteFavoriteService) Delete(c *gin.Context) serializer.Response {
 	//获取当前用户
 	user := funcs.GetUser(c)
+	if user == (model.User{}) {
+		return serializer.DBErr("", nil)
+	}
 
 	fid := c.Param("fid")
 	favorite := model.Favorites{}
 	db := model.DB.Where("collector = ? and id = ?", user.ID, fid)
-	if re := funcs.SQLErr(db.First(&favorite).Error); re != nil {
-		return serializer.Response{
-			Code: 200,
-			Data: false,
-			Msg:  "收藏夹不存在",
-		}
+	count := int64(0)
+	db.First(&favorite).Count(&count)
+	if count == 0 {
+		return serializer.ReturnData("收藏夹不存在", false)
 	}
 
-	if re := funcs.SQLErr(model.DB.Unscoped().Delete(&favorite).Error); re != nil {
-		return re.(serializer.Response)
+	if err := model.DB.Unscoped().Delete(&favorite).Error; err != nil {
+		return serializer.DBErr("", err)
 	}
 
-	return serializer.Response{
-		Code: 200,
-		Data: true,
-		Msg:  "成功",
-	}
+	return serializer.ReturnData("删除成功", true)
 }

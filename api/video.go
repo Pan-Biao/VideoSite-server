@@ -15,7 +15,7 @@ func CreateVideo(c *gin.Context) {
 		res := service.Create(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -33,7 +33,18 @@ func ListSearchVideo(c *gin.Context) {
 		res := service.List(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
+	}
+}
+
+// ListRootVideo 搜索管理视频列表接口
+func ListRootVideo(c *gin.Context) {
+	service := video.ListRootVideoService{}
+	if err := c.ShouldBind(&service); err == nil {
+		res := service.List(c)
+		c.JSON(200, res)
+	} else {
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -44,7 +55,7 @@ func UpdateVideo(c *gin.Context) {
 		res := service.Update(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -89,7 +100,7 @@ func VideoSuspend(c *gin.Context) {
 		res := service.Suspend(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -100,6 +111,6 @@ func VideoUnseal(c *gin.Context) {
 		res := service.Unseal(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }

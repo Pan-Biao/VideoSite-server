@@ -1,6 +1,7 @@
-package favorite
+package favorites
 
 import (
+	"unicode/utf8"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
 	"vodeoWeb/service/funcs"
@@ -9,20 +10,22 @@ import (
 )
 
 type CreateFavoriteService struct {
-	Name string `form:"name" json:"name" binding:"required,min=1,max=12"`
+	Name string `form:"name" json:"name"`
 }
 
 // CreateFavoriteService 创建收藏夹的服务
 func (service *CreateFavoriteService) Create(c *gin.Context) serializer.Response {
+	if utf8.RuneCountInString(service.Name) < 1 || utf8.RuneCountInString(service.Name) > 12 {
+		return serializer.ParamErr("名称长度应为1-12")
+	}
 	//获取当前用户
 	user := funcs.GetUser(c)
+	if user == (model.User{}) {
+		return serializer.DBErr("", nil)
+	}
 
 	if CheckingFavorite(user, service.Name) {
-		return serializer.Response{
-			Code: 404,
-			Data: false,
-			Msg:  "名称重复",
-		}
+		return serializer.ParamErr("名称重复")
 	}
 
 	favorites := model.Favorites{
@@ -30,15 +33,11 @@ func (service *CreateFavoriteService) Create(c *gin.Context) serializer.Response
 		Name:      service.Name,
 	}
 
-	if re := funcs.SQLErr(model.DB.Create(&favorites).Error); re != nil {
-		return re.(serializer.Response)
+	if err := model.DB.Create(&favorites).Error; err != nil {
+		return serializer.DBErr("", err)
 	}
 
-	return serializer.Response{
-		Code: 200,
-		Data: serializer.BuildFavorites(favorites),
-		Msg:  "成功",
-	}
+	return serializer.ReturnData("创建成功", serializer.BuildFavorites(favorites))
 }
 
 func CheckingFavorite(user model.User, name string) bool {

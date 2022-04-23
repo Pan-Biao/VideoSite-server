@@ -17,22 +17,16 @@ func (service *DeleteCollectionService) Delete(c *gin.Context) serializer.Respon
 
 	cid := c.Param("cid")
 	collection := model.Collection{}
+	count := int64(0)
 	db := model.DB.Where("collector = ? and collection = ?", user.ID, cid)
-	if re := funcs.SQLErr(db.First(&collection).Error); re != nil {
-		return serializer.Response{
-			Code: 200,
-			Data: true,
-			Msg:  "收藏不存在",
-		}
+	db.First(&collection).Count(&count)
+	if count == 0 {
+		return serializer.ReturnData("收藏不存在", true)
 	}
 
-	if re := funcs.SQLErr(model.DB.Unscoped().Delete(&collection).Error); re != nil {
-		return re.(serializer.Response)
+	if err := model.DB.Unscoped().Delete(&collection).Error; err != nil {
+		return serializer.DBErr("", err)
 	}
 
-	return serializer.Response{
-		Code: 200,
-		Data: true,
-		Msg:  "成功",
-	}
+	return serializer.ReturnData("删除成功", true)
 }

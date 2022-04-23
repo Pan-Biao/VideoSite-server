@@ -11,18 +11,11 @@ type ShowVideoService struct{}
 // Show 视频详情
 func (service *ShowVideoService) Show(videoId string) serializer.Response {
 	video := model.Video{}
-	err := model.DB.First(&video, videoId).Error
-	if err != nil {
-		return serializer.Response{
-			Code:  404,
-			Msg:   "视频不存在",
-			Error: err.Error(),
-		}
+	count := int64(0)
+	model.DB.First(&video, videoId).Count(&count)
+	if count == 0 {
+		return serializer.ReturnData("视频不存在", false)
 	}
 
-	return serializer.Response{
-		Code: 200,
-		Data: serializer.BuildVideo(video),
-		Msg:  "成功",
-	}
+	return serializer.ReturnData("成功", serializer.BuildVideo(video))
 }

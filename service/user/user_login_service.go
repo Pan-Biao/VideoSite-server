@@ -1,6 +1,7 @@
 package user
 
 import (
+	"unicode/utf8"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
 
@@ -10,8 +11,8 @@ import (
 
 // UserLoginService 管理用户登录的服务
 type UserLoginService struct {
-	UserName string `form:"user_name" json:"user_name" binding:"required,min=6,max=12"`
-	Password string `form:"password" json:"password" binding:"required,min=6,max=16"`
+	UserName string `form:"user_name" json:"user_name" `
+	Password string `form:"password" json:"password" `
 	Token    bool   `form:"token" json:"token"`
 }
 
@@ -27,12 +28,19 @@ func (service *UserLoginService) setSession(c *gin.Context, user model.User) {
 func (service *UserLoginService) Login(c *gin.Context) serializer.Response {
 	var user model.User
 
+	if utf8.RuneCountInString(service.UserName) < 6 || utf8.RuneCountInString(service.UserName) > 12 {
+		return serializer.ParamErr("账号应为6-12位数")
+	}
+	if utf8.RuneCountInString(service.Password) < 6 || utf8.RuneCountInString(service.Password) > 16 {
+		return serializer.ParamErr("密码应为6-16位数")
+	}
+
 	if err := model.DB.Where("user_name = ?", service.UserName).First(&user).Error; err != nil {
-		return serializer.ParamErr("账号或密码错误", nil)
+		return serializer.ParamErr("账号或密码错误")
 	}
 
 	if !user.CheckPassword(service.Password) {
-		return serializer.ParamErr("账号或密码错误", nil)
+		return serializer.ParamErr("账号或密码错误")
 	}
 
 	var token string
@@ -51,8 +59,6 @@ func (service *UserLoginService) Login(c *gin.Context) serializer.Response {
 	data := serializer.BuildUserToken(user)
 	data.Token = token
 	data.TokenExpire = tokenExpire
-	return serializer.Response{
-		Code: 200,
-		Data: data,
-	}
+
+	return serializer.ReturnData("登录成功", data)
 }

@@ -11,7 +11,7 @@ import (
 // Sorts 排序条件列表
 type Sorts struct {
 	Sort  string `form:"sort" json:"sort"`
-	Field string `form:"field" json:"field" binding:"required"`
+	Field string `form:"field" json:"field"`
 }
 
 // 评论列表
@@ -28,7 +28,9 @@ func (service *ListCommentService) List(c *gin.Context) serializer.Response {
 	//添加多个排序条件
 	if service.Sorts != nil {
 		for _, v := range *service.Sorts {
-			if v.Field != "" {
+			if v.Field == "" {
+				return serializer.ParamErr("排序条件错误")
+			} else {
 				//拼接字符串
 				strs := []string{v.Field, " ", v.Sort}
 				db = db.Order(util.Join(strs))
@@ -41,16 +43,8 @@ func (service *ListCommentService) List(c *gin.Context) serializer.Response {
 	db = db.Where("vid = ?", service.Vid)
 	//查询
 	if err := db.Find(&comments).Error; err != nil {
-		return serializer.Response{
-			Code:  50000,
-			Msg:   "评论查询错误",
-			Error: err.Error(),
-		}
+		return serializer.DBErr("", err)
 	}
 	//反回数据
-	return serializer.Response{
-		Code: 200,
-		Data: serializer.BuildComments(comments),
-		Msg:  "成功",
-	}
+	return serializer.ReturnData("成功", serializer.BuildComments(comments))
 }

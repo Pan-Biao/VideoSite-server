@@ -15,20 +15,20 @@ func (service *IsLikeVideoService) Is(c *gin.Context) serializer.Response {
 	//查找对应视频
 	vid := c.Param("vid")
 	user := funcs.GetUser(c)
+	if user == (model.User{}) {
+		return serializer.DBErr("", nil)
+	}
+
 	videoLike := model.VideoLike{}
 
 	db := model.DB
 	db = db.Where("uid = ?", user.ID)
 	db = db.Where("vid = ?", vid)
-	if re := funcs.SQLErr(db.First(&videoLike).Error); re != nil {
-		return serializer.Response{
-			Code: 200,
-			Data: false,
-		}
+	count := int64(0)
+	db.First(&videoLike).Count(&count)
+	if count == 0 {
+		return serializer.ReturnData("未点赞", false)
 	}
 
-	return serializer.Response{
-		Code: 200,
-		Data: true,
-	}
+	return serializer.ReturnData("点赞成功", true)
 }

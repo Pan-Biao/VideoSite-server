@@ -3,9 +3,9 @@ package video
 import (
 	"log"
 	"os"
-	"path"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
+	"vodeoWeb/service/funcs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,67 +15,45 @@ type DeleteVideoService struct{}
 
 // 视频删除
 func (service *DeleteVideoService) Delete(c *gin.Context) serializer.Response {
-	video := model.Video{}
 	//获取当前用户
-	user := model.User{}
-	if d, _ := c.Get("user"); d != nil {
-		if u, ok := d.(*model.User); ok {
-			user = *u
-		}
+	user := funcs.GetUser(c)
+	if user == (model.User{}) {
+		return serializer.DBErr("", nil)
 	}
+
 	vid := c.Param("vid")
 	//获取视频信息
-	err := model.DB.First(&video, vid).Error
-	if err == nil {
-		if user.ID != uint(video.Uid) {
-			log.Println("uid: ", user.ID, " ", "vuid:", video.Uid)
-			return serializer.Response{
-				Code: 404,
-				Msg:  "用户ID与视频UID不匹配",
-			}
-		}
-
-		if err := os.Remove("G:/videoResources/" + video.Path); err != nil {
-			return serializer.Response{
-				Code:  50003,
-				Msg:   "视频删除失败",
-				Error: err.Error(),
-			}
-		}
-		if err := os.Remove("G:/videoResources/" + video.Cover); err != nil {
-			return serializer.Response{
-				Code:  50003,
-				Msg:   "视频删除失败",
-				Error: err.Error(),
-			}
-		}
-
-		if err := os.Remove(path.Join(DefaultImgPath + video.Cover)); err != nil {
-			return serializer.Response{
-				Code:  50003,
-				Msg:   "视频封面删除失败",
-				Error: err.Error(),
-			}
-		}
-
-		if err = model.DB.Unscoped().Delete(&video).Error; err != nil {
-			return serializer.Response{
-				Code:  50003,
-				Msg:   "视频删除失败",
-				Error: err.Error(),
-			}
-		}
-
-		return serializer.Response{
-			Code: 200,
-			Msg:  "成功",
-		}
-
-	} else {
-		return serializer.Response{
-			Code:  404,
-			Msg:   "视频不存在",
-			Error: err.Error(),
-		}
+	video := funcs.GetVideo(vid)
+	if video == (model.Video{}) {
+		return serializer.DBErr("", nil)
 	}
+
+	if user.ID != video.Uid {
+		log.Println("uid: ", user.ID, " ", "vuid:", video.Uid)
+		return serializer.CheckNoRight()
+	}
+
+	if err := os.Remove("G:/videoResources/" + video.Path); err != nil {
+		video.State = false
+		if err := model.DB.Save(&video).Error; err != nil {
+			return serializer.DBErr("", err)
+		}
+		return serializer.FileErr("", err)
+	}
+	video.Path = ""
+
+	if err := os.Remove("G:/videoResources/" + video.Cover); err != nil {
+		video.State = false
+		if err := model.DB.Save(&video).Error; err != nil {
+			return serializer.DBErr("", err)
+		}
+		return serializer.FileErr("", err)
+	}
+
+	if err := model.DB.Unscoped().Delete(&video).Error; err != nil {
+		return serializer.DBErr("", err)
+	}
+
+	return serializer.ReturnData("视频删除成功", true)
+
 }

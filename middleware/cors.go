@@ -12,10 +12,10 @@ func Cors() gin.HandlerFunc {
 	config := cors.DefaultConfig()
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Cookie", "Authorization"}
-	config.ExposeHeaders = []string{"Content-Length"}
+	// config.ExposeHeaders = []string{"Content-Length"}
 	if gin.Mode() == gin.ReleaseMode {
 		// 生产环境需要配置跨域域名，否则403
-		config.AllowOrigins = []string{"http://120.76.134.60"}
+		config.AllowOrigins = []string{"http://120.76.134.60", "http://localhost", "http://localhost:3000", "http://120.76.134.60:23380"}
 	} else {
 		// 测试环境下模糊匹配本地开头的请求
 		config.AllowOriginFunc = func(origin string) bool {

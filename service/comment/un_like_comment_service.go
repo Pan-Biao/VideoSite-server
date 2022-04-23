@@ -14,37 +14,35 @@ type UnLikeCommentService struct{}
 func (service *UnLikeCommentService) UnLike(c *gin.Context) serializer.Response {
 	cid := c.Param("cid")
 	user := funcs.GetUser(c)
+	if user == (model.User{}) {
+		return serializer.DBErr("", nil)
+	}
 
 	comment := model.Comment{}
-	if re := funcs.SQLErr(model.DB.First(&comment, cid).Error); re != nil {
-		return re.(serializer.Response)
+	count := int64(0)
+	model.DB.First(&comment, cid).Count(&count)
+	if count == 0 {
+		return serializer.ReturnData("评论不存在", false)
 	}
 
 	commentLike := model.CommentLike{}
 	db := model.DB
 	db = db.Where("uid = ?", user.ID)
 	db = db.Where("cid = ?", cid)
-	if re := funcs.SQLErr(db.First(&commentLike).Error); re != nil {
-		return serializer.Response{
-			Code: 200,
-			Data: true,
-			Msg:  "已取消点赞",
-		}
+	db.First(&commentLike).Count(&count)
+	if count == 0 {
+		return serializer.ReturnData("点赞不存在", true)
 	}
 
-	if re := funcs.SQLErr(model.DB.Delete(&commentLike).Error); re != nil {
-		return re.(serializer.Response)
+	if err := model.DB.Delete(&commentLike).Error; err != nil {
+		return serializer.DBErr("", err)
 	}
 
 	//点赞量-1
 	comment.LikeNumber = comment.LikeNumber - 1
-	if re := funcs.SQLErr(model.DB.Save(&comment).Error); re != nil {
-		return re.(serializer.Response)
+	if err := model.DB.Save(&comment).Error; err != nil {
+		return serializer.DBErr("", err)
 	}
 
-	return serializer.Response{
-		Code: 200,
-		Data: true,
-		Msg:  "取消点赞成功",
-	}
+	return serializer.ReturnData("取消点赞成功", true)
 }

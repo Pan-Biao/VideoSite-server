@@ -14,12 +14,17 @@ type CreateFollowService struct{}
 func (service *CreateFollowService) Create(c *gin.Context) serializer.Response {
 	//获取当前用户
 	user := funcs.GetUser(c)
+	if user == (model.User{}) {
+		return serializer.DBErr("", nil)
+	}
 
 	fid := c.Param("fid")
 
 	follower := model.User{}
-	if re := funcs.SQLErr(model.DB.First(&follower, fid).Error); re != nil {
-		return re.(serializer.Response)
+	count := int64(0)
+	model.DB.First(&follower, fid).Count(&count)
+	if count == 0 {
+		return serializer.ReturnData("关注用户不存在", false)
 	}
 
 	follow := model.Follow{
@@ -27,23 +32,14 @@ func (service *CreateFollowService) Create(c *gin.Context) serializer.Response {
 		Fans:     user.ID,
 	}
 	temp := model.Follow{}
-
-	model.DB.Where("follower = ?", follow.Follower).Where("fans = ?", follow.Fans).First(&temp)
-
-	if temp.Fans == follow.Fans {
-		return serializer.Response{
-			Code: 50001,
-			Msg:  "已关注",
-		}
+	model.DB.Where("follower = ?", follow.Follower).Where("fans = ?", follow.Fans).First(&temp).Count(&count)
+	if count != 0 {
+		return serializer.ReturnData("已关注", true)
 	}
 
-	if re := funcs.SQLErr(model.DB.Create(&follow).Error); re != nil {
-		return re.(serializer.Response)
+	if err := model.DB.Create(&follow).Error; err != nil {
+		return serializer.DBErr("", err)
 	}
 
-	return serializer.Response{
-		Code: 200,
-		Data: true,
-		Msg:  "关注成功",
-	}
+	return serializer.ReturnData("关注成功", true)
 }

@@ -13,7 +13,7 @@ func CreateSubArea(c *gin.Context) {
 		res := service.Create(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -24,7 +24,7 @@ func ListSubArea(c *gin.Context) {
 		res := service.List()
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -35,7 +35,7 @@ func UpdateSubArea(c *gin.Context) {
 		res := service.Update(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 

@@ -16,7 +16,7 @@ func UserRegister(c *gin.Context) {
 		res := service.Register()
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -27,7 +27,7 @@ func UserLogin(c *gin.Context) {
 		res := service.Login(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -56,7 +56,7 @@ func UpdateUser(c *gin.Context) {
 		res := service.Update(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -67,7 +67,7 @@ func UserInformation(c *gin.Context) {
 		res := service.Get(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -78,7 +78,7 @@ func UserList(c *gin.Context) {
 		res := service.List(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -89,7 +89,7 @@ func UserSuspend(c *gin.Context) {
 		res := service.Suspend(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 
@@ -100,7 +100,7 @@ func UserUnseal(c *gin.Context) {
 		res := service.Unseal(c)
 		c.JSON(200, res)
 	} else {
-		c.JSON(500, ErrorResponse(err))
+		c.JSON(200, ErrorResponse(err))
 	}
 }
 

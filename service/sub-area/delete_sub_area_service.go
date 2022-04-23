@@ -14,32 +14,20 @@ type DeleteSubAreaService struct{}
 // 分区删除
 func (service *DeleteSubAreaService) Delete(c *gin.Context) serializer.Response {
 	if !funcs.CheckRoot(c) {
-		return serializer.Response{
-			Code: 9999,
-			Msg:  "没有权限",
-		}
+		return serializer.CheckNoRight()
 	}
 
 	said := c.Param("said")
 	subArea := model.SubArea{}
-	if err := model.DB.First(&subArea, said).Error; err != nil {
-		return serializer.Response{
-			Code:  404,
-			Msg:   "分区不存在",
-			Error: err.Error(),
-		}
+	count := int64(0)
+	model.DB.First(&subArea, said).Count(&count)
+	if count == 0 {
+		return serializer.ReturnData("分区不存在", false)
 	}
 
 	if err := model.DB.Unscoped().Delete(&subArea).Error; err != nil {
-		return serializer.Response{
-			Code:  60003,
-			Msg:   "分区删除失败",
-			Error: err.Error(),
-		}
+		return serializer.DBErr("", err)
 	}
 
-	return serializer.Response{
-		Code: 200,
-		Msg:  "成功",
-	}
+	return serializer.ReturnData("删除成功", true)
 }

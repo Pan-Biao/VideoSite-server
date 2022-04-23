@@ -8,22 +8,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//不点赞
+// 是否点赞
 type IsLikeCommentService struct{}
 
 func (service *IsLikeCommentService) List(c *gin.Context) serializer.Response {
 	user := funcs.GetUser(c)
+	if user == (model.User{}) {
+		return serializer.DBErr("", nil)
+	}
 
 	db := model.DB
 	db = db.Where("uid = ?", user.ID)
-
 	commentLikes := []model.CommentLike{}
-	if re := funcs.SQLErr(db.Find(&commentLikes).Error); re != nil {
-		return re.(serializer.Response)
+
+	if err := db.Find(&commentLikes).Error; err != nil {
+		return serializer.DBErr("", err)
 	}
 
-	return serializer.Response{
-		Code: 200,
-		Data: serializer.BuildLikeComments(commentLikes),
-	}
+	return serializer.ReturnData("", serializer.BuildLikeComments(commentLikes))
 }

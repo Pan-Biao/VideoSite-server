@@ -18,18 +18,12 @@ func (service *IsCollectionService) Is(c *gin.Context) serializer.Response {
 	db := model.DB
 	db = db.Where("collector = ?", user.ID)
 	db = db.Where("Collection = ?", cid)
-	if re := db.First(&collection).Error; re != nil {
-		return serializer.Response{
-			Code: 200,
-			Data: false,
-			Msg:  "未收藏",
-		}
+	count := int64(0)
+	db.First(&collection).Count(&count)
+	if count == 0 {
+		return serializer.ReturnData("未收藏", false)
 	}
 
-	return serializer.Response{
-		Code: 200,
-		Data: true,
-		Msg:  "已收藏",
-	}
+	return serializer.ReturnData("已收藏", true)
 
 }
