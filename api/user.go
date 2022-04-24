@@ -31,6 +31,17 @@ func UserLogin(c *gin.Context) {
 	}
 }
 
+// ChangePassword 修改密码接口
+func ChangePassword(c *gin.Context) {
+	service := user.ChangePasswordService{}
+	if err := c.ShouldBind(&service); err == nil {
+		res := service.Change(c)
+		c.JSON(200, res)
+	} else {
+		c.JSON(200, ErrorResponse(err))
+	}
+}
+
 // UserTokenRefresh 用户刷新token接口
 func UserTokenRefresh(c *gin.Context) {
 	currUser := CurrentUser(c)

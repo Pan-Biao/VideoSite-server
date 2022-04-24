@@ -1,7 +1,7 @@
 package user
 
 import (
-	"unicode/utf8"
+	"regexp"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
 )
@@ -16,18 +16,21 @@ type UserRegisterService struct {
 
 // valid 验证表单
 func (service *UserRegisterService) valid() *serializer.Response {
-	if utf8.RuneCountInString(service.Nickname) < 2 || utf8.RuneCountInString(service.Nickname) > 8 {
+	if re, _ := regexp.MatchString("^.{2,8}$", service.Password); !re {
 		sr := serializer.ParamErr("昵称长度应为2-8个字")
 		return &sr
 	}
-	if utf8.RuneCountInString(service.UserName) < 6 || utf8.RuneCountInString(service.UserName) > 12 {
-		sr := serializer.ParamErr("用户名长度应为6-12位数")
+
+	if re, _ := regexp.MatchString("^[a-z0-9_-]{6,12}$", service.Password); !re {
+		sr := serializer.ParamErr("用户名格式错误,应为6-12位数字或小写字母")
 		return &sr
 	}
-	if utf8.RuneCountInString(service.UserName) < 6 || utf8.RuneCountInString(service.UserName) > 16 {
-		sr := serializer.ParamErr("密码长度应为6-16位数")
+
+	if re, _ := regexp.MatchString("^[a-zA-Z0-9]{6,16}$", service.Password); !re {
+		sr := serializer.ParamErr("密码格式错误,应为6-16位数字或大小写字母")
 		return &sr
 	}
+
 	if service.PasswordConfirm != service.Password {
 		sr := serializer.ParamErr("两次输入的密码不相同")
 		return &sr

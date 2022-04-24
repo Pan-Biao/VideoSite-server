@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"vodeoWeb/cache"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
@@ -15,10 +16,13 @@ func CurrentUser() gin.HandlerFunc {
 		var uid string
 		token := c.GetHeader("Authorization")
 		if token != "" {
+			fmt.Println("---------------token--------------")
 			uid, _ = cache.GetUserByToken(token)
 		} else {
+			fmt.Println("---------------session--------------")
 			session := sessions.Default(c)
 			uid, _ = session.Get("user_id").(string)
+			fmt.Println("----------", uid)
 		}
 		if uid != "" {
 			user, err := model.GetUser(uid)

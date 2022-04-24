@@ -1,7 +1,8 @@
 package user
 
 import (
-	"unicode/utf8"
+	"fmt"
+	"regexp"
 	"vodeoWeb/model"
 	"vodeoWeb/serializer"
 
@@ -28,11 +29,12 @@ func (service *UserLoginService) setSession(c *gin.Context, user model.User) {
 func (service *UserLoginService) Login(c *gin.Context) serializer.Response {
 	var user model.User
 
-	if utf8.RuneCountInString(service.UserName) < 6 || utf8.RuneCountInString(service.UserName) > 12 {
-		return serializer.ParamErr("账号应为6-12位数")
+	if re, _ := regexp.MatchString("^[a-z0-9_-]{6,12}$", service.Password); !re {
+		return serializer.ParamErr("用户名格式错误,应为6-12位数字或小写字母")
 	}
-	if utf8.RuneCountInString(service.Password) < 6 || utf8.RuneCountInString(service.Password) > 16 {
-		return serializer.ParamErr("密码应为6-16位数")
+
+	if re, _ := regexp.MatchString("^[a-zA-Z0-9]{6,16}$", service.Password); !re {
+		return serializer.ParamErr("密码格式错误,应为6-16位数字或大小写字母")
 	}
 
 	if err := model.DB.Where("user_name = ?", service.UserName).First(&user).Error; err != nil {
@@ -46,19 +48,21 @@ func (service *UserLoginService) Login(c *gin.Context) serializer.Response {
 	var token string
 	var tokenExpire int64
 	var err error
+
+	data := serializer.BuildUserToken(user)
+
 	if service.Token {
 		token, tokenExpire, err = user.MakeToken()
 		if err != nil {
 			return serializer.DBErr("redis err", err)
 		}
+		data.Token = token
+		data.TokenExpire = tokenExpire
 	} else {
 		// web端设置session
+		fmt.Println("----------------------", user.ID)
 		service.setSession(c, user)
 	}
-
-	data := serializer.BuildUserToken(user)
-	data.Token = token
-	data.TokenExpire = tokenExpire
 
 	return serializer.ReturnData("登录成功", data)
 }

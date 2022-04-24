@@ -38,11 +38,11 @@ func NewRouter() *gin.Engine {
 		authed.Use(middleware.AuthRequired())
 		{
 			//用户接口
-			authed.GET("user/me", api.UserMe) //获取用户数据
-			// 用户刷新token
-			authed.POST("user/refresh", api.UserTokenRefresh) //用户刷新token
-			authed.DELETE("user/logout", api.UserLogout)      //退出登录
-			authed.PUT("user/update", api.UpdateUser)         //修改用户数据
+			authed.GET("user/me", api.UserMe)                       //获取用户数据
+			authed.POST("user/refresh", api.UserTokenRefresh)       //用户刷新token
+			authed.POST("user/change_password", api.ChangePassword) //修改密码
+			authed.DELETE("user/logout", api.UserLogout)            //退出登录
+			authed.PUT("user/update", api.UpdateUser)               //修改用户数据
 		}
 
 		//分区列表接口
